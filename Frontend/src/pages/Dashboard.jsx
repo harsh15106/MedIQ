@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiLogOut, FiUser, FiSun, FiMoon, FiActivity, FiFolder, FiSettings } from 'react-icons/fi';
+import { FiUser, FiSun, FiMoon, FiActivity, FiFolder, FiSettings } from 'react-icons/fi';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -8,10 +8,13 @@ export default function Dashboard() {
 
   // Sync theme state with the current HTML class when dashboard loads
   useEffect(() => {
-    if (document.documentElement.classList.contains('dark')) {
+    if (localStorage.theme === 'dark') {
       setIsDarkMode(true);
+      document.documentElement.classList.add('dark');
     } else {
       setIsDarkMode(false);
+      document.documentElement.classList.remove('dark');
+      localStorage.theme = 'light';
     }
   }, []);
 
@@ -25,11 +28,6 @@ export default function Dashboard() {
       localStorage.theme = 'dark';
       setIsDarkMode(true);
     }
-  };
-
-  const handleLogout = () => {
-    // Redirect back to the home page
-    navigate('/');
   };
 
   return (
@@ -47,24 +45,21 @@ export default function Dashboard() {
             {/* Dark Mode Toggle */}
             <button 
               onClick={toggleTheme} 
-              className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition"
+              className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition  cursor-pointer"
               title="Toggle Dark Mode"
             >
               {isDarkMode ? <FiSun className="text-xl" /> : <FiMoon className="text-xl" />}
             </button>
 
-            <div className="hidden sm:flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 border-l border-slate-200 dark:border-slate-700 pl-6">
+            {/* Clickable Demo User (Navigates to Settings) */}
+            <button 
+              onClick={() => navigate('/settings')}
+              className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 border-l border-slate-200 dark:border-slate-700 pl-4 sm:pl-6 hover:text-teal-600 dark:hover:text-teal-400 transition  cursor-pointer"
+            >
               <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-800">
                 <FiUser />
               </div>
-              Demo User
-            </div>
-
-            <button 
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-semibold transition bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg"
-            >
-              <FiLogOut /> <span className="hidden sm:inline">Logout</span>
+              <span className="hidden sm:inline  cursor-pointer">Demo User</span>
             </button>
           </div>
         </div>
@@ -92,7 +87,7 @@ export default function Dashboard() {
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 relative z-10">Start a new AI consultation to check your current symptoms and get instant advice.</p>
             <button 
               onClick={() => navigate('/symptom-check')}
-              className="w-full px-4 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-bold hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 transition shadow-sm relative z-10"
+              className="w-full px-4 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-bold hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 transition shadow-sm relative z-10 cursor-pointer"
             >
               Start Chat
             </button>
@@ -110,13 +105,13 @@ export default function Dashboard() {
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 relative z-10">View your saved medical history, past AI insights, and upload new lab results.</p>
             <button 
               onClick={() => navigate('/records')}
-              className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition shadow-sm relative z-10"
+              className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition shadow-sm relative z-10 cursor-pointer"
             >
               Open Vault
             </button>
           </div>
 
-          {/* Card 3: Profile Settings (Placeholder) */}
+          {/* Card 3: Profile Settings */}
           <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-200 dark:border-slate-800 group relative overflow-hidden">
             <div className="absolute top-0 right-0 p-6 opacity-5 dark:opacity-10 transform group-hover:scale-110 transition-transform">
               <FiSettings className="text-8xl" />
@@ -127,8 +122,8 @@ export default function Dashboard() {
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2 relative z-10">Account Settings</h2>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 relative z-10">Update your personal information, change your password, and manage preferences.</p>
             <button 
-              onClick={() => alert('Settings page coming soon!')}
-              className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition shadow-sm relative z-10"
+              onClick={() => navigate('/settings')}
+              className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition shadow-sm relative z-10 cursor-pointer"
             >
               Manage Profile
             </button>

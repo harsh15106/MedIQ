@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiUploadCloud, FiFileText, FiTrash2, FiClock } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 
 export default function HealthRecords() {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ export default function HealthRecords() {
     // Reset form after submission
     setNewFile(null);
     setNewNote('');
-    alert("New health record added successfully!");
+    toast.success("Record saved to your secure vault!");
   };
 
   return (
@@ -45,7 +46,7 @@ export default function HealthRecords() {
         <div className="max-w-7xl mx-auto flex items-center gap-4">
           <button 
             onClick={() => navigate('/dashboard')}
-            className="p-2 text-slate-500 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 bg-slate-100 hover:bg-teal-50 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition"
+            className="p-2 text-slate-500 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 bg-slate-100 hover:bg-teal-50 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition cursor-pointer"
           >
             <FiArrowLeft className="text-xl" />
           </button>
@@ -101,14 +102,12 @@ export default function HealthRecords() {
                   <p className="text-xs text-slate-500 dark:text-slate-400">Uploaded Oct 24, 2023</p>
                 </div>
               </div>
-              <button className="text-sm font-medium text-teal-600 dark:text-teal-400 hover:underline">View</button>
+              <button className="text-sm font-medium text-teal-600 dark:text-teal-400 hover:underline cursor-pointer">View</button>
             </div>
           </div>
 
 
-          {/* ==========================================
-              RIGHT COLUMN: ADD NEW RECORD
-              ========================================== */}
+          {/*RIGHT COLUMN: ADD NEW RECORD */}
           <div className="space-y-6">
             <h2 className="text-2xl font-bold tracking-tight">Add New Record</h2>
             
@@ -169,7 +168,7 @@ export default function HealthRecords() {
               {/* Submit Button */}
               <button 
                 type="submit" 
-                className="w-full py-3 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 transition shadow-md"
+                className="w-full py-3 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 transition shadow-md cursor-pointer"
               >
                 Save Record to Vault
               </button>

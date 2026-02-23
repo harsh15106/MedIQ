@@ -189,13 +189,13 @@ export default function MedicalProfile() {
               <button 
                 type="button" 
                 onClick={handleSkip}
-                className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-medium transition order-2 sm:order-1"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-medium transition order-2 sm:order-1  cursor-pointer"
               >
                 Skip for now
               </button>
               <button 
                 type="submit" 
-                className="w-full sm:w-auto px-8 py-3 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 transition shadow-md order-1 sm:order-2"
+                className="w-full sm:w-auto px-8 py-3 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 transition shadow-md order-1 sm:order-2 cursor-pointer"
               >
                 Save & Continue
               </button>

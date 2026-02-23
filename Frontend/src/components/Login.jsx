@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FcGoogle } from 'react-icons/fc';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,6 +21,7 @@ export default function Login() {
     // --- DUMMY LOGIN LOGIC ---
     if (email === 'user@mediq.com' && password === 'admin123') {
       // Success! Send them to the medical profile onboarding
+      toast.success('Successfully logged in!');
       navigate('/onboarding');
     } else {
       // Fail! Show an error

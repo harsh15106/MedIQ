@@ -6,10 +6,32 @@ import Dashboard from './pages/Dashboard';
 import MedicalProfile from './pages/MedicalProfile'; 
 import HealthRecords from './pages/HealthRecords';
 import SymptomCheck from './pages/SymptomCheck';
+import { Toaster } from 'react-hot-toast';
+import ProfileSettings from './pages/ProfileSettings';
+
+
+
+
 function App() {
   return (
     <Router>
       <div className="min-h-screen bg-white">
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: '#334155', // slate-700
+              color: '#fff',
+            },
+            success: {
+              style: { background: '#0d9488', color: 'white' }, // teal-600
+            },
+            error: {
+              style: { background: '#ef4444', color: 'white' }, // red-500
+            },
+          }} 
+        />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/auth" element={<AuthPage />} />
@@ -20,6 +42,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} /> 
           <Route path="/records" element={<HealthRecords />} />
           <Route path="/symptom-check" element={<SymptomCheck />} />
+          <Route path="/settings" element={<ProfileSettings />} />
 
           <Route path="*" element={
             <div className="flex flex-col items-center justify-center min-h-screen dark:bg-slate-950">

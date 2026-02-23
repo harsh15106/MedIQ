@@ -74,7 +74,7 @@ export default function SymptomCheck() {
       <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center gap-4 z-10 shrink-0">
         <button 
           onClick={() => navigate('/dashboard')}
-          className="p-2 text-slate-500 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 bg-slate-100 hover:bg-teal-50 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition"
+          className="p-2 text-slate-500 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 bg-slate-100 hover:bg-teal-50 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition cursor-pointer"
         >
           <FiArrowLeft className="text-xl" />
         </button>
@@ -117,7 +117,7 @@ export default function SymptomCheck() {
                   </div>
                 )}
 
-                {/* RENDER TEXT MESSAGE (Only if text is not empty) */}
+                {/* RENDER TEXT MESSAGE */}
                 {msg.text && (
                   <div className={`px-5 py-3.5 rounded-2xl shadow-sm text-sm sm:text-base leading-relaxed ${
                     msg.sender === 'user'
@@ -200,7 +200,7 @@ export default function SymptomCheck() {
             <button
               type="submit"
               disabled={(!input.trim() && !selectedFile) || isThinking}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-3 bg-teal-600 hover:bg-teal-700 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-3 bg-teal-600 hover:bg-teal-700 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               <FiSend className="text-lg" />
             </button>
