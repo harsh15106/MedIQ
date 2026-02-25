@@ -2,36 +2,46 @@ import React, { useState } from 'react';
 import { FcGoogle } from 'react-icons/fc';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../utils/SupabaseClient'; //
 import toast from 'react-hot-toast';
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
-  
-  // State to hold the user's input
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false); // Added loading state
   
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(''); // Clear any previous errors
+    setLoading(true);
 
-    // --- DUMMY LOGIN LOGIC ---
-    if (email === 'user@mediq.com' && password === 'admin123') {
-      // Success! Send them to the medical profile onboarding
-      toast.success('Successfully logged in!');
-      navigate('/onboarding');
+    // Real Supabase Login Logic
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    }); //
+
+    if (error) {
+      toast.error(error.message); // Displays real errors (e.g., "Invalid login credentials")
+      setLoading(false);
     } else {
-      // Fail! Show an error
-      setError('Invalid credentials. Try: user@mediq.com / admin123');
+      toast.success('Successfully logged in!');
+      // After login, check if the user has a completed profile
+      navigate('/dashboard'); 
     }
   };
 
-  const handleGoogleLogin = () => {
-    // Google login bypasses to onboarding for testing purposes
-    navigate('/onboarding');
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/dashboard'
+      }
+    }); //
+
+    if (error) toast.error(error.message);
   };
 
   return (
@@ -43,7 +53,7 @@ export default function Login() {
         className="w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-sm font-medium text-slate-700 dark:text-slate-300"
       >
         <FcGoogle className="text-2xl" />
-        Sign in with Google (Demo)
+        Sign in with Google
       </button>
 
       {/* Divider */}
@@ -59,14 +69,6 @@ export default function Login() {
       </div>
 
       <form className="space-y-4" onSubmit={handleSubmit}>
-        
-        {/* Error Message Display */}
-        {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400 text-center">
-            {error}
-          </div>
-        )}
-
         {/* Email Field */}
         <div className="flex flex-col gap-1">
           <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -75,14 +77,14 @@ export default function Login() {
           <input 
             type="email" 
             required 
-            placeholder="user@mediq.com" 
+            placeholder="your@email.com" 
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="px-3 py-2 border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-teal-500 outline-none text-sm shadow-sm transition-colors" 
           />
         </div>
         
-        {/* Password Field with Eye Icon */}
+        {/* Password Field */}
         <div className="flex flex-col gap-1">
           <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
             Password <span className="text-red-500">*</span>
@@ -91,7 +93,7 @@ export default function Login() {
             <input 
               type={showPassword ? "text" : "password"} 
               required 
-              placeholder="admin123" 
+              placeholder="••••••••" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-teal-500 outline-none text-sm shadow-sm pr-10 transition-colors" 
@@ -109,9 +111,10 @@ export default function Login() {
         {/* Submit Button */}
         <button 
           type="submit" 
-          className="w-full py-3 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 transition shadow-md"
+          disabled={loading}
+          className="w-full py-3 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 transition shadow-md disabled:opacity-50"
         >
-          Sign In
+          {loading ? 'Verifying...' : 'Sign In'}
         </button>
       </form>
     </div>

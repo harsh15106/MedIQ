@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiUploadCloud, FiFileText, FiTrash2 } from 'react-icons/fi'; // Import icons for the upload area
-
+import { supabase } from '../utils/SupabaseClient'; // Ensure the path matches your folder structure
 export default function MedicalProfile() {
   const navigate = useNavigate();
   
@@ -35,15 +35,55 @@ export default function MedicalProfile() {
     setPdfFile(null);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Saved Medical Profile Data:", medicalData);
-    if (pdfFile) {
-      console.log("Uploaded PDF File:", pdfFile.name);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  try {
+    // 1. Get the current logged-in user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      alert("Session expired. Please sign in again.");
+      navigate('/login');
+      return;
     }
-    // After saving the data/file, send them to the dashboard
+
+    // 2. Handle PDF Upload (if a file exists)
+    let pdfUrl = null;
+    if (pdfFile) {
+      const fileExt = pdfFile.name.split('.').pop();
+      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+      const filePath = `reports/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('medical-records') // Make sure you create this bucket in Supabase!
+        .upload(filePath, pdfFile);
+
+      if (uploadError) throw uploadError;
+      pdfUrl = filePath; 
+    }
+
+    // 3. Update the 'profiles' table with manual data
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        chronic_conditions: medicalData.conditions,
+        current_medications: medicalData.medications,
+        known_allergies: medicalData.allergies,
+        past_surgeries: medicalData.surgeries,
+        // profile_report_path: pdfUrl, // Uncomment if you add this column
+      })
+      .eq('id', user.id); // Ensures we update the correct user
+
+    if (updateError) throw updateError;
+
+    alert("Medical profile saved successfully!");
     navigate('/dashboard');
-  };
+
+  } catch (err) {
+    alert(err.message);
+  }
+};
 
   const handleSkip = () => {
     // Allow users to skip and fill it out later
