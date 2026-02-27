@@ -13,7 +13,7 @@ export default function ProfileSettings() {
   // --- STATE: GENERAL PROFILE ---
   const [profileData, setProfileData] = useState({
     firstName: '',
-    lastName: '',
+    last_name: last_name || null,
     email: '',
     phone: '',
     

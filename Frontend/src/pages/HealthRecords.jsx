@@ -135,10 +135,11 @@ export default function HealthRecords() {
         fileUrl = filePath;
       }
 
-      // 3. Update the existing row in Health_Records table instead of inserting a new one
+      // 3. Insert a new row into the Health_Records table
       const { error: insertError } = await supabase
         .from('Health_Records')
-        .update({
+        .insert([{
+          user_id: user.id,
           additional_notes: newNote,
           file_path: fileUrl,
 
@@ -156,8 +157,7 @@ export default function HealthRecords() {
           triglycerides: healthMetrics.triglycerides ? parseFloat(healthMetrics.triglycerides) : null,
           haemoglobin: healthMetrics.haemoglobin ? parseFloat(healthMetrics.haemoglobin) : null,
           mcv: healthMetrics.mcv ? parseFloat(healthMetrics.mcv) : null,
-        })
-        .eq('user_id', user.id);
+        }]);
 
       if (insertError) throw insertError;
 
@@ -165,7 +165,8 @@ export default function HealthRecords() {
       if (healthMetrics.bloodGlucose || healthMetrics.systolicBP || healthMetrics.hbA1c || healthMetrics.ldl) {
         setIsAnalyzing(true);
         try {
-          const modelResponse = await fetch('http://localhost:5000/api/analyze-health', {
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+          const modelResponse = await fetch(`${apiUrl}/api/analyze-health`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
