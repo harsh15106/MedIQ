@@ -1,22 +1,35 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/Authpage';
 import Dashboard from './pages/Dashboard';
-import MedicalProfile from './pages/MedicalProfile'; 
+import MedicalProfile from './pages/MedicalProfile';
 import HealthRecords from './pages/HealthRecords';
 import SymptomCheck from './pages/SymptomCheck';
 import { Toaster } from 'react-hot-toast';
 import ProfileSettings from './pages/ProfileSettings';
 
 
-
+console.log("SUPABASE URL:", import.meta.env.VITE_SUPABASE_URL)
+console.log("SUPABASE KEY:", import.meta.env.VITE_SUPABASE_ANON_KEY)
 
 function App() {
+
+  // Enforce dark mode on global app load/refresh
+  useEffect(() => {
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+      localStorage.theme = 'dark'; // ensure it's set
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.theme = 'light';
+    }
+  }, []);
+
   return (
     <Router>
       <div className="min-h-screen bg-white">
-        <Toaster 
+        <Toaster
           position="top-right"
           toastOptions={{
             duration: 3000,
@@ -30,16 +43,16 @@ function App() {
             error: {
               style: { background: '#ef4444', color: 'white' }, // red-500
             },
-          }} 
+          }}
         />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/auth" element={<AuthPage />} />
-          
+
           {/* Add the new Onboarding Route */}
-          <Route path="/onboarding" element={<MedicalProfile />} /> 
-          
-          <Route path="/dashboard" element={<Dashboard />} /> 
+          <Route path="/onboarding" element={<MedicalProfile />} />
+
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/records" element={<HealthRecords />} />
           <Route path="/symptom-check" element={<SymptomCheck />} />
           <Route path="/settings" element={<ProfileSettings />} />

@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiUploadCloud, FiFileText, FiTrash2 } from 'react-icons/fi'; // Import icons for the upload area
 import { supabase } from '../utils/SupabaseClient'; // Ensure the path matches your folder structure
+import toast from 'react-hot-toast';
 export default function MedicalProfile() {
   const navigate = useNavigate();
-  
+
   // State for manual text inputs
   const [medicalData, setMedicalData] = useState({
     conditions: '',
@@ -26,7 +27,7 @@ export default function MedicalProfile() {
     if (file && file.type === 'application/pdf') {
       setPdfFile(file);
     } else {
-      alert('Please upload a valid PDF file.');
+      toast.error('Please upload a valid PDF file.');
     }
   };
 
@@ -35,55 +36,55 @@ export default function MedicalProfile() {
     setPdfFile(null);
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  try {
-    // 1. Get the current logged-in user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      alert("Session expired. Please sign in again.");
-      navigate('/login');
-      return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      // 1. Get the current logged-in user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        toast.error("Session expired. Please sign in again.");
+        navigate('/login');
+        return;
+      }
+
+      // 2. Handle PDF Upload (if a file exists)
+      let pdfUrl = null;
+      if (pdfFile) {
+        const fileExt = pdfFile.name.split('.').pop();
+        const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+        const filePath = `reports/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('medical-records') // Make sure you create this bucket in Supabase!
+          .upload(filePath, pdfFile);
+
+        if (uploadError) throw uploadError;
+        pdfUrl = filePath;
+      }
+
+      // 3. Update the 'profiles' table with manual data
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          chronic_conditions: medicalData.conditions,
+          current_medications: medicalData.medications,
+          known_allergies: medicalData.allergies,
+          past_surgeries: medicalData.surgeries,
+          // profile_report_path: pdfUrl, // Uncomment if you add this column
+        })
+        .eq('id', user.id); // Ensures we update the correct user
+
+      if (updateError) throw updateError;
+
+      toast.success("Medical profile saved successfully!");
+      navigate('/dashboard');
+
+    } catch (err) {
+      toast.error(err.message);
     }
-
-    // 2. Handle PDF Upload (if a file exists)
-    let pdfUrl = null;
-    if (pdfFile) {
-      const fileExt = pdfFile.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `reports/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('medical-records') // Make sure you create this bucket in Supabase!
-        .upload(filePath, pdfFile);
-
-      if (uploadError) throw uploadError;
-      pdfUrl = filePath; 
-    }
-
-    // 3. Update the 'profiles' table with manual data
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        chronic_conditions: medicalData.conditions,
-        current_medications: medicalData.medications,
-        known_allergies: medicalData.allergies,
-        past_surgeries: medicalData.surgeries,
-        // profile_report_path: pdfUrl, // Uncomment if you add this column
-      })
-      .eq('id', user.id); // Ensures we update the correct user
-
-    if (updateError) throw updateError;
-
-    alert("Medical profile saved successfully!");
-    navigate('/dashboard');
-
-  } catch (err) {
-    alert(err.message);
-  }
-};
+  };
 
   const handleSkip = () => {
     // Allow users to skip and fill it out later
@@ -92,9 +93,9 @@ const handleSubmit = async (e) => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 font-sans text-slate-800 transition-colors duration-300">
-      
+
       <div className="max-w-3xl mx-auto">
-        
+
         {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-block bg-teal-100 dark:bg-slate-800 text-teal-800 dark:text-teal-400 px-4 py-1.5 rounded-full text-sm font-semibold mb-4 shadow-sm border border-teal-200 dark:border-slate-700">
@@ -110,9 +111,9 @@ const handleSubmit = async (e) => {
 
         {/* Form Card */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-6 md:p-10 transition-colors duration-300">
-          
+
           <form onSubmit={handleSubmit} className="space-y-8">
-            
+
             {/* --- PDF UPLOAD SECTION --- */}
             <div className="p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-950/50 text-center transition-colors">
               {!pdfFile ? (
@@ -138,8 +139,8 @@ const handleSubmit = async (e) => {
                       <p className="text-xs text-slate-500 dark:text-slate-400">{(pdfFile.size / 1024 / 1024).toFixed(2)} MB</p>
                     </div>
                   </div>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={removeFile}
                     className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
                     title="Remove File"
@@ -166,11 +167,11 @@ const handleSubmit = async (e) => {
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   Chronic Conditions or Illnesses
                 </label>
-                <textarea 
+                <textarea
                   name="conditions"
                   value={medicalData.conditions}
                   onChange={handleChange}
-                  rows="2" 
+                  rows="2"
                   className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-xl focus:ring-2 focus:ring-teal-500 outline-none shadow-sm transition-colors resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
                   placeholder="e.g., Asthma, Diabetes, Hypertension..."
                 ></textarea>
@@ -181,11 +182,11 @@ const handleSubmit = async (e) => {
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   Current Medications
                 </label>
-                <textarea 
+                <textarea
                   name="medications"
                   value={medicalData.medications}
                   onChange={handleChange}
-                  rows="2" 
+                  rows="2"
                   className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-xl focus:ring-2 focus:ring-teal-500 outline-none shadow-sm transition-colors resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
                   placeholder="e.g., Lisinopril 10mg daily, Vitamin D..."
                 ></textarea>
@@ -197,11 +198,11 @@ const handleSubmit = async (e) => {
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                     Known Allergies
                   </label>
-                  <textarea 
+                  <textarea
                     name="allergies"
                     value={medicalData.allergies}
                     onChange={handleChange}
-                    rows="2" 
+                    rows="2"
                     className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-xl focus:ring-2 focus:ring-teal-500 outline-none shadow-sm transition-colors resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
                     placeholder="e.g., Penicillin, Peanuts..."
                   ></textarea>
@@ -212,11 +213,11 @@ const handleSubmit = async (e) => {
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                     Past Surgeries
                   </label>
-                  <textarea 
+                  <textarea
                     name="surgeries"
                     value={medicalData.surgeries}
                     onChange={handleChange}
-                    rows="2" 
+                    rows="2"
                     className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-xl focus:ring-2 focus:ring-teal-500 outline-none shadow-sm transition-colors resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
                     placeholder="e.g., Appendectomy (2015)..."
                   ></textarea>
@@ -226,15 +227,15 @@ const handleSubmit = async (e) => {
 
             {/* --- BUTTONS --- */}
             <div className="pt-6 flex flex-col sm:flex-row gap-4 items-center justify-between border-t border-slate-100 dark:border-slate-800">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={handleSkip}
                 className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-medium transition order-2 sm:order-1  cursor-pointer"
               >
                 Skip for now
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="w-full sm:w-auto px-8 py-3 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 transition shadow-md order-1 sm:order-2 cursor-pointer"
               >
                 Save & Continue

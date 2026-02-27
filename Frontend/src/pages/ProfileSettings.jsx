@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/SupabaseClient';
-import { FiArrowLeft, FiUser, FiLock, FiBell, FiShield, FiSave, FiEdit2, FiX, FiLogOut } from 'react-icons/fi';
+import { FiArrowLeft, FiUser, FiLock, FiBell, FiShield, FiActivity, FiSave, FiEdit2, FiX, FiLogOut } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 export default function ProfileSettings() {
@@ -20,8 +20,16 @@ export default function ProfileSettings() {
     state: '',
     country: '',
     pincode: '',
-    dob: '',
-    bloodGroup: 'Unknown'
+    dob: ''
+  });
+
+  // --- STATE: MEDICAL HISTORY ---
+  const [medicalData, setMedicalData] = useState({
+    bloodGroup: 'Unknown',
+    chronicConditions: '',
+    currentMedications: '',
+    allergies: '',
+    surgeries: ''
   });
 
   // --- STATE: PREFERENCES ---
@@ -35,9 +43,21 @@ export default function ProfileSettings() {
     aiTrainingConsent: false,
   });
 
+  // --- STATE: SECURITY ---
+  const [securityData, setSecurityData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
   useEffect(() => {
     fetchProfile();
   }, []);
+
+  useEffect(() => {
+    setIsEditing(false); // Reset editing mode when switching tabs
+  }, [activeTab]);
 
   const fetchProfile = async () => {
     try {
@@ -57,6 +77,14 @@ export default function ProfileSettings() {
 
       if (error && error.code !== 'PGRST116') throw error;
 
+      const { data: medData, error: medError } = await supabase
+        .from('Health_Records')
+        .select('blood_group, chronic_conditions, current_medications, allergies, surgeries')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
       if (data) {
         setProfileData({
           firstName: data.first_name || '',
@@ -67,10 +95,20 @@ export default function ProfileSettings() {
           state: data.state || '',
           country: data.country || '',
           pincode: data.pincode || '',
-          dob: data.dob || '',
-          bloodGroup: data.blood_group || 'Unknown',
+          dob: data.dob || ''
         });
       }
+
+      if (medData) {
+        setMedicalData({
+          bloodGroup: medData.blood_group || 'Unknown',
+          chronicConditions: medData.chronic_conditions || '',
+          currentMedications: medData.current_medications || '',
+          allergies: medData.allergies || '',
+          surgeries: medData.surgeries || ''
+        });
+      }
+
     } catch (error) {
       toast.error('Error loading profile');
       console.error(error);
@@ -85,6 +123,11 @@ export default function ProfileSettings() {
     setProfileData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleMedicalChange = (e) => {
+    const { name, value } = e.target;
+    setMedicalData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleToggle = (category, field) => {
     if (category === 'notifications') {
       setNotifications(prev => ({ ...prev, [field]: !prev[field] }));
@@ -94,37 +137,103 @@ export default function ProfileSettings() {
     toast.success('Preference updated locally');
   };
 
-  const handleSave = async (e) => {
-  if (e) e.preventDefault();
-  try {
+  const handleSecurityChange = (e) => {
+    const { name, value } = e.target;
+    setSecurityData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePasswordUpdate = async (e) => {
+    e.preventDefault();
+    if (!securityData.currentPassword) {
+      return toast.error("Please enter your current password");
+    }
+    if (securityData.newPassword !== securityData.confirmPassword) {
+      return toast.error("New passwords do not match");
+    }
+
+    setIsUpdatingPassword(true);
+
+    // 1. Get the current user email to re-authenticate
     const { data: { user } } = await supabase.auth.getUser();
 
-    // UPSERT is "Update or Insert"
-    const { error } = await supabase
-      .from('profiles')
-      .upsert({
-        id: user.id, // Primary key is required for upsert to work
-        first_name: profileData.firstName,
-        last_name: profileData.lastName,
-        phone: profileData.phone,
-        city: profileData.city,
-        state: profileData.state,
-        country: profileData.country,
-        pincode: profileData.pincode,
-        //age: parseInt(profileData.age) || null, // Convert string to number for SQL 'int'
-        blood_group: profileData.bloodGroup,    // Match your SQL column name
-        dob: profileData.dob || null
-      });
+    // 2. Verify current password by attempting to sign in
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: securityData.currentPassword
+    });
 
-    if (error) throw error;
-    
-    toast.success('Profile saved successfully!');
-    setIsEditing(false);
-  } catch (error) {
-    toast.error('Failed to update profile');
-    console.error("Supabase Error:", error);
-  }
-};
+    if (signInError) {
+      setIsUpdatingPassword(false);
+      return toast.error("Incorrect current password.");
+    }
+
+    // 3. Current password is correct, update to new password
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: securityData.newPassword
+    });
+
+    if (updateError) {
+      toast.error(updateError.message);
+    } else {
+      toast.success("Password updated successfully!");
+      setSecurityData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    }
+    setIsUpdatingPassword(false);
+  };
+
+  const handleSave = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (activeTab === 'general') {
+        const { error } = await supabase
+          .from('profiles')
+          .upsert({
+            id: user.id,
+            first_name: profileData.firstName,
+            last_name: profileData.lastName,
+            phone: profileData.phone,
+            city: profileData.city,
+            state: profileData.state,
+            country: profileData.country,
+            pincode: profileData.pincode,
+            dob: profileData.dob || null
+          });
+
+        if (error) throw error;
+        toast.success('Profile saved successfully!');
+      } else if (activeTab === 'medical') {
+        const { data: existingRecords } = await supabase.from('Health_Records').select('id').eq('user_id', user.id).limit(1).maybeSingle();
+
+        if (existingRecords) {
+          const { error } = await supabase.from('Health_Records').update({
+            blood_group: medicalData.bloodGroup,
+            chronic_conditions: medicalData.chronicConditions,
+            current_medications: medicalData.currentMedications,
+            allergies: medicalData.allergies,
+            surgeries: medicalData.surgeries
+          }).eq('user_id', user.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.from('Health_Records').insert([{
+            user_id: user.id,
+            blood_group: medicalData.bloodGroup,
+            chronic_conditions: medicalData.chronicConditions,
+            current_medications: medicalData.currentMedications,
+            allergies: medicalData.allergies,
+            surgeries: medicalData.surgeries
+          }]);
+          if (error) throw error;
+        }
+        toast.success('Medical History saved successfully!');
+      }
+      setIsEditing(false);
+    } catch (error) {
+      toast.error('Failed to update details');
+      console.error("Supabase Error:", error);
+    }
+  };
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success('Successfully logged out.');
@@ -156,6 +265,7 @@ export default function ProfileSettings() {
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
               <nav className="flex flex-col">
                 <TabButton id="general" icon={<FiUser />} label="General Info" active={activeTab} onClick={setActiveTab} />
+                <TabButton id="medical" icon={<FiActivity />} label="Medical History" active={activeTab} onClick={setActiveTab} />
                 <TabButton id="security" icon={<FiLock />} label="Security" active={activeTab} onClick={setActiveTab} />
                 <TabButton id="notifications" icon={<FiBell />} label="Notifications" active={activeTab} onClick={setActiveTab} />
                 <TabButton id="privacy" icon={<FiShield />} label="Privacy" active={activeTab} onClick={setActiveTab} />
@@ -168,7 +278,7 @@ export default function ProfileSettings() {
 
           <div className="flex-1">
             <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-              
+
               {activeTab === 'general' && (
                 <div className="animate-fade-in">
                   <div className="flex justify-between items-center mb-6">
@@ -186,12 +296,6 @@ export default function ProfileSettings() {
                       <Input label="Email Address" name="email" type="email" value={profileData.email} onChange={handleChange} disabled={!isEditing} className={inputBaseClass} />
                       <Input label="Phone Number" name="phone" type="tel" value={profileData.phone} onChange={handleChange} disabled={!isEditing} className={inputBaseClass} />
                       <Input label="Date of Birth" name="dob" type="date" value={profileData.dob} onChange={handleChange} disabled={!isEditing} className={inputBaseClass} />
-                      <div className="flex flex-col gap-1">
-                        <label className="text-sm font-semibold">Blood Group</label>
-                        <select name="bloodGroup" value={profileData.bloodGroup} onChange={handleChange} disabled={!isEditing} className={inputBaseClass}>
-                          {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'Unknown'].map(bg => <option key={bg} value={bg}>{bg}</option>)}
-                        </select>
-                      </div>
                     </div>
                     <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
                       <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Location</h3>
@@ -203,15 +307,42 @@ export default function ProfileSettings() {
                       </div>
                     </div>
                     {isEditing && (
-                      <div className="pt-6 flex justify-end gap-3"><button
-  type="button"
-  onClick={() => {
-    setProfileData(originalData);
-    setIsEditing(false);
-  }}
->
-  Cancel
-</button>
+                      <div className="pt-6 flex justify-end gap-3">
+                        <button type="button" onClick={() => { fetchProfile(); setIsEditing(false); }} className="px-4 text-slate-500 hover:text-slate-700"> Cancel </button>
+                        <button type="submit" className="px-6 py-2.5 bg-teal-600 text-white rounded-lg font-bold">Save Changes</button>
+                      </div>
+                    )}
+                  </form>
+                </div>
+              )}
+
+              {activeTab === 'medical' && (
+                <div className="animate-fade-in">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold">Medical History</h2>
+                    {!isEditing && (
+                      <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm font-medium">
+                        <FiEdit2 /> Edit History
+                      </button>
+                    )}
+                  </div>
+                  <form onSubmit={handleSave} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Blood Group</label>
+                        <select name="bloodGroup" value={medicalData.bloodGroup} onChange={handleMedicalChange} disabled={!isEditing} className={inputBaseClass}>
+                          {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'Unknown'].map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                        </select>
+                      </div>
+                      <div className="hidden md:block"></div>
+                      <Input label="Chronic Conditions" name="chronicConditions" value={medicalData.chronicConditions} onChange={handleMedicalChange} disabled={!isEditing} className={inputBaseClass} placeholder="e.g. Asthma, Diabetes" />
+                      <Input label="Current Medications" name="currentMedications" value={medicalData.currentMedications} onChange={handleMedicalChange} disabled={!isEditing} className={inputBaseClass} placeholder="e.g. Lisinopril 10mg" />
+                      <Input label="Allergies" name="allergies" value={medicalData.allergies} onChange={handleMedicalChange} disabled={!isEditing} className={inputBaseClass} placeholder="e.g. Penicillin, Peanuts" />
+                      <Input label="Surgeries" name="surgeries" value={medicalData.surgeries} onChange={handleMedicalChange} disabled={!isEditing} className={inputBaseClass} placeholder="e.g. Appendectomy (2015)" />
+                    </div>
+                    {isEditing && (
+                      <div className="pt-6 flex justify-end gap-3">
+                        <button type="button" onClick={() => { fetchProfile(); setIsEditing(false); }} className="px-4 text-slate-500 hover:text-slate-700">Cancel</button>
                         <button type="submit" className="px-6 py-2.5 bg-teal-600 text-white rounded-lg font-bold">Save Changes</button>
                       </div>
                     )}
@@ -221,23 +352,71 @@ export default function ProfileSettings() {
 
               {activeTab === 'notifications' && (
                 <div className="space-y-6">
-                   <h2 className="text-2xl font-bold">Notifications</h2>
-                   <ToggleRow title="Security Alerts" description="Logins and password changes" checked={notifications.securityAlerts} onChange={() => handleToggle('notifications', 'securityAlerts')} />
-                   <ToggleRow title="Health Follow-ups" description="Reminders for check-ins" checked={notifications.healthReminders} onChange={() => handleToggle('notifications', 'healthReminders')} />
+                  <h2 className="text-2xl font-bold">Notifications</h2>
+                  <ToggleRow title="Security Alerts" description="Logins and password changes" checked={notifications.securityAlerts} onChange={() => handleToggle('notifications', 'securityAlerts')} />
+                  <ToggleRow title="Health Follow-ups" description="Reminders for check-ins" checked={notifications.healthReminders} onChange={() => handleToggle('notifications', 'healthReminders')} />
                 </div>
               )}
 
               {activeTab === 'privacy' && (
                 <div className="space-y-6">
-                   <h2 className="text-2xl font-bold">Privacy</h2>
-                   <ToggleRow title="AI Training" description="Anonymized data usage" checked={privacy.aiTrainingConsent} onChange={() => handleToggle('privacy', 'aiTrainingConsent')} />
+                  <h2 className="text-2xl font-bold">Privacy</h2>
+                  <ToggleRow title="AI Training" description="Anonymized data usage" checked={privacy.aiTrainingConsent} onChange={() => handleToggle('privacy', 'aiTrainingConsent')} />
                 </div>
               )}
 
               {activeTab === 'security' && (
-                <div className="text-center py-12">
-                  <FiLock className="text-4xl mx-auto mb-4 text-slate-400" />
-                  <p>Security settings coming soon.</p>
+                <div className="animate-fade-in">
+                  <div className="mb-6">
+                    <h2 className="text-2xl font-bold">Password & Security</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Update your password to keep your medical data secure.</p>
+                  </div>
+                  <form onSubmit={handlePasswordUpdate} className="space-y-6 max-w-md">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Current Password</label>
+                      <input
+                        type="password"
+                        name="currentPassword"
+                        value={securityData.currentPassword}
+                        onChange={handleSecurityChange}
+                        className={inputBaseClass}
+                        required
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">New Password</label>
+                      <input
+                        type="password"
+                        name="newPassword"
+                        value={securityData.newPassword}
+                        onChange={handleSecurityChange}
+                        className={inputBaseClass}
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Confirm New Password</label>
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        value={securityData.confirmPassword}
+                        onChange={handleSecurityChange}
+                        className={inputBaseClass}
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        disabled={isUpdatingPassword}
+                        className="px-6 py-2.5 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 transition shadow-sm disabled:opacity-50"
+                      >
+                        {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               )}
 
