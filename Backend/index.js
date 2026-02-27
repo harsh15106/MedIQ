@@ -19,6 +19,50 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
  * In a real-world scenario, you would pass these metrics to a Python service
  * (using Flask/FastAPI) running your actual Machine Learning model (e.g. Scikit-learn, TensorFlow).
  */
+
+app.post('/api/symptom-check', async (req, res) => {
+    try {
+        const { symptoms, userId } = req.body;
+
+        if (!symptoms) {
+            return res.status(400).json({ success: false, error: "No symptoms provided" });
+        }
+
+        // 1. FORWARD TO YOUR AI MODEL
+        // Replace 'http://localhost:8000/predict' with your actual AI service URL
+        // const aiResponse = await axios.post('http://localhost:8000/predict', {
+        //     text: symptoms 
+        // });
+        // const botMessage = aiResponse.data.message;
+
+        // --- SIMULATED CHATBOT RESPONSE (Replace with actual API call above) ---
+        const botMessage = `Based on your mention of "${symptoms}", it could be related to seasonal allergies or a common cold. However, please track if you develop a fever.`;
+        const suggestedSpecialist = "General Physician";
+
+        // 2. OPTIONAL: Save the interaction to Supabase 'logs'
+        if (userId) {
+            await supabase
+                .from('health_logs')
+                .insert([{ 
+                    user_id: userId, 
+                    type: 'symptom_check', 
+                    input: symptoms, 
+                    output: botMessage 
+                }]);
+        }
+
+        return res.status(200).json({
+            success: true,
+            reply: botMessage,
+            recommendation: suggestedSpecialist,
+            disclaimer: "This is an AI-generated insight and not a medical diagnosis."
+        });
+
+    } catch (error) {
+        console.error("Symptom Check Error:", error);
+        return res.status(500).json({ success: false, error: "AI service is currently unavailable" });
+    }
+});
 app.post('/api/analyze-health', async (req, res) => {
     try {
         const {
