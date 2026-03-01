@@ -161,40 +161,69 @@ export default function HealthRecords() {
 
       if (insertError) throw insertError;
 
-      // 4. Send Metrics to the Backend Health Model
-      if (healthMetrics.bloodGlucose || healthMetrics.systolicBP || healthMetrics.hbA1c || healthMetrics.ldl) {
-        setIsAnalyzing(true);
-        try {
-          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-          const modelResponse = await fetch(`${apiUrl}/api/analyze-health`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              blood_glucose: healthMetrics.bloodGlucose ? parseFloat(healthMetrics.bloodGlucose) : null,
-              hba1c: healthMetrics.hbA1c ? parseFloat(healthMetrics.hbA1c) : null,
-              systolic_bp: healthMetrics.systolicBP ? parseFloat(healthMetrics.systolicBP) : null,
-              diastolic_bp: healthMetrics.diastolicBP ? parseFloat(healthMetrics.diastolicBP) : null,
-              ldl: healthMetrics.ldl ? parseFloat(healthMetrics.ldl) : null,
-              hdl: healthMetrics.hdl ? parseFloat(healthMetrics.hdl) : null,
-              triglycerides: healthMetrics.triglycerides ? parseFloat(healthMetrics.triglycerides) : null,
-              haemoglobin: healthMetrics.haemoglobin ? parseFloat(healthMetrics.haemoglobin) : null,
-              mcv: healthMetrics.mcv ? parseFloat(healthMetrics.mcv) : null,
-            })
-          });
+    // 4. Send to AI (Choose between Manual Metrics or File Analysis)
+if (newFile || healthMetrics.bloodGlucose || healthMetrics.systolicBP) {
+  setIsAnalyzing(true);
+  try {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    let modelResponse;
 
-          if (modelResponse.ok) {
-            const result = await modelResponse.json();
-            if (result.success && result.analysis) {
-              setModelInsights(result.analysis);
-              toast.success("AI Analysis Complete!");
-            }
-          }
-        } catch (modelError) {
-          console.error("Failed to reach AI Backend:", modelError);
-          toast.error("Saved record, but couldn't reach AI Model.");
-        } finally {
-          setIsAnalyzing(false);
-        }
+    if (newFile) {
+      // IF FILE EXISTS: Use the "From Report" endpoint
+      const formData = new FormData();
+      formData.append('file', newFile);
+      
+      modelResponse = await fetch(`${apiUrl}/api/analyze-report`, { // You'll need this route in Express
+        method: 'POST',
+        body: formData,
+        // Don't set Content-Type header, the browser will set it for FormData
+      });
+    } else {
+      // IF NO FILE: Send manual metrics as JSON
+      const payload = {
+        Blood_glucose: parseFloat(healthMetrics.bloodGlucose) || 0,
+        HbA1C: parseFloat(healthMetrics.hbA1c) || 0,
+        Systolic_BP: parseFloat(healthMetrics.systolicBP) || 0,
+        Diastolic_BP: parseFloat(healthMetrics.diastolicBP) || 0,
+        LDL: parseFloat(healthMetrics.ldl) || 0,
+        HDL: parseFloat(healthMetrics.hdl) || 0,
+        Triglycerides: parseFloat(healthMetrics.triglycerides) || 0,
+        Haemoglobin: parseFloat(healthMetrics.haemoglobin) || 0,
+        MCV: parseFloat(healthMetrics.mcv) || 0
+      };
+
+     modelResponse = await fetch(`${apiUrl}/api/analyze-health`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+
+if (!modelResponse.ok) {
+    const errorText = await modelResponse.text();
+    console.error("Backend returned HTML error instead of JSON:", errorText);
+    toast.error("AI service encountered an error.");
+    return;
+}
+
+const result = await modelResponse.json();
+if (result.success) {
+    setModelInsights(result.analysis);
+}
+    }
+
+    const result = await modelResponse.json();
+    if (result.success) {
+      setModelInsights(result.analysis);
+      toast.success("MedIQ AI Analysis Complete!");
+    }
+  } catch (modelError) {
+    console.error("AI Service Error:", modelError);
+    toast.error("Saved record, but AI analysis failed.");
+  } finally {
+    setIsAnalyzing(false);
+  
+}
       }
 
       // 5. Reset form after successful submission
@@ -419,48 +448,80 @@ export default function HealthRecords() {
               )}
             </div>
 
-            {/* AI HEALTH MODEL INSIGHTS UI */}
+            {/* AI HEALTH MODEL INSIGHTS UI - mapped to model output: predicted_condition, confidence, risk_category, clinical_indicators */}
             {modelInsights && (
-              <div className="mt-8 animate-fade-in bg-theme-bg-light/10 p-6 md:p-8 rounded-[2rem] border border-theme-bg-light/30 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-5 transform scale-150 -translate-y-4 translate-x-4 pointer-events-none">
-                  <FiClock className="text-6xl text-theme-accent" />
-                </div>
-                <div className="flex items-center gap-3 mb-4 relative z-10">
-                  <div className="p-2 bg-theme-accent text-white rounded-[1rem] shadow-sm">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+              <div className="mt-8 animate-fade-in bg-white dark:bg-slate-900 p-6 rounded-2xl border-2 border-teal-500 shadow-xl relative overflow-hidden">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-teal-600 text-white rounded-lg shadow-sm">
+                    <FiFileText className="text-xl" />
                   </div>
-                  <h3 className="text-lg font-medium text-slate-800 tracking-tight">MedIQ AI Insight</h3>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">AI Analysis Results</h3>
                 </div>
 
-                <div className="space-y-4 relative z-10">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-theme-text/80">Determined Risk Level:</span>
-                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${modelInsights.riskLevel === 'High' ? 'bg-red-50 text-red-600 border border-red-100' :
-                      modelInsights.riskLevel === 'Moderate' ? 'bg-yellow-50 text-yellow-700 border border-yellow-100' :
-                        'bg-theme-bg-light/30 text-theme-accent border border-theme-accent/20'
+                <div className="grid grid-cols-1 gap-4">
+                  {/* Predicted Condition - model returns predicted_condition */}
+                  <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Predicted Condition</p>
+                    <p className="text-lg font-bold text-emerald-800 dark:text-emerald-200">
+                      {modelInsights.predicted_condition || modelInsights.prediction || 'Unknown'}
+                    </p>
+                  </div>
+
+                  {/* Model Confidence - model returns 0–1 decimal, e.g. 0.989 → 98.9% */}
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
+                    <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">Model Confidence</p>
+                    <p className="text-lg font-bold text-blue-800 dark:text-blue-200">
+                      {typeof modelInsights.confidence === 'number'
+                        ? `${(modelInsights.confidence * 100).toFixed(1)}%`
+                        : modelInsights.confidence ?? '—'}
+                    </p>
+                  </div>
+
+                  {/* Risk Category - model returns risk_category (e.g. "Moderate Risk") */}
+                  {(modelInsights.risk_category || modelInsights.riskLevel) && (
+                    <div className={`p-4 border rounded-xl ${
+                      (modelInsights.risk_category || modelInsights.riskLevel || '').toLowerCase().includes('high')
+                        ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800'
+                        : (modelInsights.risk_category || modelInsights.riskLevel || '').toLowerCase().includes('moderate')
+                        ? 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800'
+                        : 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800'
+                    }`}>
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Risk Category</p>
+                      <p className={`text-lg font-bold ${
+                        (modelInsights.risk_category || modelInsights.riskLevel || '').toLowerCase().includes('high')
+                          ? 'text-red-700 dark:text-red-400'
+                          : (modelInsights.risk_category || modelInsights.riskLevel || '').toLowerCase().includes('moderate')
+                          ? 'text-amber-700 dark:text-amber-400'
+                          : 'text-emerald-700 dark:text-emerald-400'
                       }`}>
-                      {modelInsights.riskLevel}
-                    </span>
-                  </div>
+                        {modelInsights.risk_category || modelInsights.riskLevel}
+                      </p>
+                    </div>
+                  )}
 
-                  <ul className="space-y-2 mt-4">
-                    {modelInsights.insights.map((insight, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm text-theme-text/80 leading-relaxed font-light">
-                        <span className="text-theme-accent mt-0.5">•</span>
-                        {insight}
-                      </li>
-                    ))}
-                  </ul>
+                  {/* Contributing Biomarkers - model returns clinical_indicators */}
+                  {Array.isArray(modelInsights.clinical_indicators) && modelInsights.clinical_indicators.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-2">Contributing Biomarkers</p>
+                      <ul className="space-y-2">
+                        {modelInsights.clinical_indicators.map((item, i) => (
+                          <li key={i} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                            <span className="w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0" /> {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
+
                 <button
                   onClick={() => setModelInsights(null)}
-                  className="mt-6 text-xs font-medium text-theme-accent hover:opacity-80 transition-opacity cursor-pointer border-b border-theme-accent/30 pb-0.5"
+                  className="mt-6 w-full py-2 text-sm font-semibold text-slate-500 hover:text-slate-700 underline"
                 >
-                  Dismiss Insight
+                  Clear Results
                 </button>
               </div>
-            )}
-          </div>
+            )}</div>
 
 
           {/*RIGHT COLUMN: ADD NEW RECORD */}

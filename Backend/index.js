@@ -2,12 +2,16 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+import axios from 'axios';  
+import multer from 'multer';
 
 dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+const upload = multer();
 
 // Initialize Supabase Client
 const supabaseUrl = process.env.SUPABASE_URL || 'YOUR_SUPABASE_URL';
@@ -20,7 +24,50 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
  * (using Flask/FastAPI) running your actual Machine Learning model (e.g. Scikit-learn, TensorFlow).
  */
 
-app.post('/api/symptom-check', async (req, res) => {
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://127.0.0.1:8000';
+// Add this helper to handle JSON vs File logic
+app.post('/api/analyze-health', upload.single('file'), async (req, res) => {
+    console.log(req.body)
+    try {
+        let response;
+        const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://127.0.0.1:8000';
+
+        if (req.file) {
+            // SCENARIO A: File Upload (PDF/Image)
+            const FormData = require('form-data');
+            const form = new FormData();
+            form.append('file', req.file.buffer, {
+                filename: req.file.originalname,
+                contentType: req.file.mimetype,
+            });
+
+            response = await axios.post(`${ML_SERVICE_URL}/predict-from-report`, form, {
+                headers: form.getHeaders()
+            });
+        } else {
+            // SCENARIO B: Manual Input
+            // Ensure req.body is not empty. If React sends JSON, 
+            // ensure your frontend headers match or use a fallback.
+            console.log("Processing manual metrics:", req.body);
+            
+            response = await axios.post(`${ML_SERVICE_URL}/predict`, req.body);
+        }
+
+        res.json({ 
+            success: true, 
+            analysis: response.data 
+        });
+
+    } catch (error) {
+        console.error("ML Service Error:", error.message);
+        res.status(500).json({ 
+            success: false, 
+            error: "The AI Model service is currently unreachable." 
+        });
+    }
+});
+
+/*{app.post('/api/symptom-check', async (req, res) => {
     try {
         const { symptoms, userId } = req.body;
 
@@ -62,8 +109,13 @@ app.post('/api/symptom-check', async (req, res) => {
         console.error("Symptom Check Error:", error);
         return res.status(500).json({ success: false, error: "AI service is currently unavailable" });
     }
+});}*/
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Node server running on http://localhost:${PORT}`);
 });
-app.post('/api/analyze-health', async (req, res) => {
+/*{app.post('/api/analyze-health', async (req, res) => {
     try {
         const {
             blood_glucose,
@@ -123,9 +175,8 @@ app.post('/api/analyze-health', async (req, res) => {
         console.error("Model Error:", error);
         return res.status(500).json({ success: false, error: "Failed to run health model analysis" });
     }
-});
+});}*/
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`MedIQ Backend Server is running on port ${PORT}`);
-});
+// In your Express index.js
+//require('dotenv').config();
+
