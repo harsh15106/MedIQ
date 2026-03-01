@@ -10,3 +10,4 @@ pillow
 pytesseract
 pdf2image
 python-multipart
+python-dotenv

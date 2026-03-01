@@ -1,7 +1,33 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiSend, FiUser, FiCpu, FiPaperclip, FiX, FiImage, FiFileText } from 'react-icons/fi';
 import { supabase } from '../utils/SupabaseClient';
+
+// --- NEW: TYPEWRITER COMPONENT ---
+const TypewriterText = ({ text, onType }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const index = useRef(0);
+
+  useEffect(() => {
+    setDisplayedText('');
+    index.current = 0;
+
+    const timer = setInterval(() => {
+      if (index.current < text.length) {
+        setDisplayedText((prev) => prev + text.charAt(index.current));
+        index.current++;
+        if (onType && index.current % 3 === 0) onType();
+      } else {
+        clearInterval(timer);
+        if (onType) onType();
+      }
+    }, 15);
+
+    return () => clearInterval(timer);
+  }, [text, onType]);
+
+  return <>{displayedText}</>;
+};
 
 export default function SymptomCheck() {
   const navigate = useNavigate();
@@ -71,6 +97,7 @@ export default function SymptomCheck() {
             gender: profile.gender || "Male",
             height_cm: profile.height ? Number(profile.height) : 170.0,
             weight_kg: profile.weight ? Number(profile.weight) : 70.0,
+            user_id: user.id
           }));
         }
       } catch (err) {
@@ -98,9 +125,13 @@ export default function SymptomCheck() {
   }, []);
 
   // 2. AUTO-SCROLL TO BOTTOM OF CHAT
-  useEffect(() => {
+  const scrollToBottom = useCallback(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isThinking]);
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isThinking, scrollToBottom]);
 
   // 3. HANDLE FILE SELECTION
   const handleFileSelect = (e) => {
@@ -155,7 +186,7 @@ export default function SymptomCheck() {
 
     try {
       // Call the Python FastAPI
-      const response = await fetch('http://127.0.0.1:8001/chat', {
+      const response = await fetch('http://127.0.0.1:8000/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -300,7 +331,11 @@ export default function SymptomCheck() {
                     ? 'bg-gradient-to-r from-theme-accent to-theme-accent-light text-white rounded-tr-none shadow-ai-glow'
                     : 'bg-white border border-white text-slate-800 rounded-tl-none'
                     }`}>
-                    {msg.text}
+                    {msg.sender === 'ai' ? (
+                      <TypewriterText text={msg.text} onType={scrollToBottom} />
+                    ) : (
+                      msg.text
+                    )}
                   </div>
                 )}
               </div>

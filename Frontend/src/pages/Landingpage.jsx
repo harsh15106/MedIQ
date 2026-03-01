@@ -103,7 +103,7 @@ export default function LandingPage() {
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-5 w-full sm:w-auto">
                 <button
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => navigate('/auth?mode=login')}
                   className="px-8 py-4 rounded-full font-medium text-[16px] text-[#000000] bg-gradient-to-br from-[#2FA4A4] to-[#38B2AC] shadow-[0_0_20px_rgba(47,164,164,0.35)] transition-all duration-250 ease-out hover:-translate-y-[2px] hover:shadow-[0_0_35px_rgba(47,164,164,0.6)] active:scale-95 flex items-center justify-center gap-2"
                 >
                   Access AI Dashboard

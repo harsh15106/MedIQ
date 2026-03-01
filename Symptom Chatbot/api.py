@@ -26,9 +26,11 @@ labels = jb.load("label_encoder.pkl")
 
 
 from question_selector import select_best_question
+from patient_history_service import get_patient_history_from_backend
 import re
 
 class PatientProfile(BaseModel):
+    user_id: str | None = None
     age: int
     gender: str
     height_cm: float
@@ -90,6 +92,10 @@ def chat(data: ChatRequest):
     current_probs = np.power(current_probs, 0.75)
     current_probs /= current_probs.sum()
 
+    # Fetch patient history from DB if user_id is provided
+    patient_history = get_patient_history_from_backend(profile.user_id) if profile.user_id else {}
+    previous_diseases = patient_history.get("previous_diseases", [])
+
     # 4. Clinical Heuristic Boosts
     duration_weeks = 0 # Assume 0 for stateless
     match = re.search(r'(\d+)\s*week', new_text.lower())
@@ -107,6 +113,13 @@ def chat(data: ChatRequest):
     if profile.family_history:
         for i, disease in enumerate(labels.classes_):
             if disease == "Heart attack": current_probs[i] *= 1.6
+
+    # Boost probability for previously diagnosed conditions
+    if previous_diseases:
+        for i, disease in enumerate(labels.classes_):
+            if disease in previous_diseases:
+                current_probs[i] *= 1.5
+
     if {"high_fever", "cough"} <= confirmed:
         for i, disease in enumerate(labels.classes_):
             if disease in ["Pneumonia", "Common Cold", "Tuberculosis"]: current_probs[i] *= 2.0

@@ -161,69 +161,69 @@ export default function HealthRecords() {
 
       if (insertError) throw insertError;
 
-    // 4. Send to AI (Choose between Manual Metrics or File Analysis)
-if (newFile || healthMetrics.bloodGlucose || healthMetrics.systolicBP) {
-  setIsAnalyzing(true);
-  try {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    let modelResponse;
+      // 4. Send to AI (Choose between Manual Metrics or File Analysis)
+      if (newFile || healthMetrics.bloodGlucose || healthMetrics.systolicBP) {
+        setIsAnalyzing(true);
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+          let modelResponse;
 
-    if (newFile) {
-      // IF FILE EXISTS: Use the "From Report" endpoint
-      const formData = new FormData();
-      formData.append('file', newFile);
-      
-      modelResponse = await fetch(`${apiUrl}/api/analyze-report`, { // You'll need this route in Express
-        method: 'POST',
-        body: formData,
-        // Don't set Content-Type header, the browser will set it for FormData
-      });
-    } else {
-      // IF NO FILE: Send manual metrics as JSON
-      const payload = {
-        Blood_glucose: parseFloat(healthMetrics.bloodGlucose) || 0,
-        HbA1C: parseFloat(healthMetrics.hbA1c) || 0,
-        Systolic_BP: parseFloat(healthMetrics.systolicBP) || 0,
-        Diastolic_BP: parseFloat(healthMetrics.diastolicBP) || 0,
-        LDL: parseFloat(healthMetrics.ldl) || 0,
-        HDL: parseFloat(healthMetrics.hdl) || 0,
-        Triglycerides: parseFloat(healthMetrics.triglycerides) || 0,
-        Haemoglobin: parseFloat(healthMetrics.haemoglobin) || 0,
-        MCV: parseFloat(healthMetrics.mcv) || 0
-      };
+          if (newFile) {
+            // IF FILE EXISTS: Use the "From Report" endpoint
+            const formData = new FormData();
+            formData.append('file', newFile);
 
-     modelResponse = await fetch(`${apiUrl}/api/analyze-health`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
+            modelResponse = await fetch(`${apiUrl}/api/analyze-report`, { // You'll need this route in Express
+              method: 'POST',
+              body: formData,
+              // Don't set Content-Type header, the browser will set it for FormData
+            });
+          } else {
+            // IF NO FILE: Send manual metrics as JSON
+            const payload = {
+              Blood_glucose: parseFloat(healthMetrics.bloodGlucose) || 0,
+              HbA1C: parseFloat(healthMetrics.hbA1c) || 0,
+              Systolic_BP: parseFloat(healthMetrics.systolicBP) || 0,
+              Diastolic_BP: parseFloat(healthMetrics.diastolicBP) || 0,
+              LDL: parseFloat(healthMetrics.ldl) || 0,
+              HDL: parseFloat(healthMetrics.hdl) || 0,
+              Triglycerides: parseFloat(healthMetrics.triglycerides) || 0,
+              Haemoglobin: parseFloat(healthMetrics.haemoglobin) || 0,
+              MCV: parseFloat(healthMetrics.mcv) || 0
+            };
+
+            modelResponse = await fetch(`${apiUrl}/api/analyze-health`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
 
 
-if (!modelResponse.ok) {
-    const errorText = await modelResponse.text();
-    console.error("Backend returned HTML error instead of JSON:", errorText);
-    toast.error("AI service encountered an error.");
-    return;
-}
+            if (!modelResponse.ok) {
+              const errorText = await modelResponse.text();
+              console.error("Backend returned HTML error instead of JSON:", errorText);
+              toast.error("AI service encountered an error.");
+              return;
+            }
 
-const result = await modelResponse.json();
-if (result.success) {
-    setModelInsights(result.analysis);
-}
-    }
+            const result = await modelResponse.json();
+            if (result.success) {
+              setModelInsights(result.analysis);
+            }
+          }
 
-    const result = await modelResponse.json();
-    if (result.success) {
-      setModelInsights(result.analysis);
-      toast.success("MedIQ AI Analysis Complete!");
-    }
-  } catch (modelError) {
-    console.error("AI Service Error:", modelError);
-    toast.error("Saved record, but AI analysis failed.");
-  } finally {
-    setIsAnalyzing(false);
-  
-}
+          const result = await modelResponse.json();
+          if (result.success) {
+            setModelInsights(result.analysis);
+            toast.success("MedIQ AI Analysis Complete!");
+          }
+        } catch (modelError) {
+          console.error("AI Service Error:", modelError);
+          toast.error("Saved record, but AI analysis failed.");
+        } finally {
+          setIsAnalyzing(false);
+
+        }
       }
 
       // 5. Reset form after successful submission
@@ -479,21 +479,19 @@ if (result.success) {
 
                   {/* Risk Category - model returns risk_category (e.g. "Moderate Risk") */}
                   {(modelInsights.risk_category || modelInsights.riskLevel) && (
-                    <div className={`p-4 border rounded-xl ${
-                      (modelInsights.risk_category || modelInsights.riskLevel || '').toLowerCase().includes('high')
+                    <div className={`p-4 border rounded-xl ${(modelInsights.risk_category || modelInsights.riskLevel || '').toLowerCase().includes('high')
                         ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800'
                         : (modelInsights.risk_category || modelInsights.riskLevel || '').toLowerCase().includes('moderate')
-                        ? 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800'
-                        : 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800'
-                    }`}>
+                          ? 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800'
+                          : 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800'
+                      }`}>
                       <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Risk Category</p>
-                      <p className={`text-lg font-bold ${
-                        (modelInsights.risk_category || modelInsights.riskLevel || '').toLowerCase().includes('high')
+                      <p className={`text-lg font-bold ${(modelInsights.risk_category || modelInsights.riskLevel || '').toLowerCase().includes('high')
                           ? 'text-red-700 dark:text-red-400'
                           : (modelInsights.risk_category || modelInsights.riskLevel || '').toLowerCase().includes('moderate')
-                          ? 'text-amber-700 dark:text-amber-400'
-                          : 'text-emerald-700 dark:text-emerald-400'
-                      }`}>
+                            ? 'text-amber-700 dark:text-amber-400'
+                            : 'text-emerald-700 dark:text-emerald-400'
+                        }`}>
                         {modelInsights.risk_category || modelInsights.riskLevel}
                       </p>
                     </div>
