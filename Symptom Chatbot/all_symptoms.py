@@ -32,10 +32,11 @@ for disease, group in disease_groups:
     symptom_means = group.drop("Disease", axis=1).mean()
     disease_symptom_prob[disease] = symptom_means
 
-# Generate synthetic patients (low noise)
+# Generate synthetic patients (added noise and dropout to prevent overfitting)
 synthetic_rows = []
 samples_per_disease = 400
-noise_rate = 0.03
+noise_rate = 0.08 # Reduced from 0.15 to prevent severe underfitting
+dropout_rate = 0.10 # Reduced from 0.20
 
 for disease, symptom_probs in disease_symptom_prob.items():
     for _ in range(samples_per_disease):
@@ -48,6 +49,10 @@ for disease, symptom_probs in disease_symptom_prob.items():
 
             if np.random.rand() < noise_rate:
                 value = not value
+            
+            # Simulate patient forgetting to mention a symptom
+            if value and np.random.rand() < dropout_rate:
+                value = False
 
             patient.append(int(value))
 

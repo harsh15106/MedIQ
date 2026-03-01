@@ -12,6 +12,9 @@ export default function MedicalProfile() {
     medications: '',
     allergies: '',
     surgeries: '',
+    weight: '',
+    height: '',
+    gender: ''
   });
 
   // State to hold the uploaded PDF file
@@ -72,6 +75,9 @@ export default function MedicalProfile() {
           current_medications: medicalData.medications,
           known_allergies: medicalData.allergies,
           past_surgeries: medicalData.surgeries,
+          weight: medicalData.weight ? Number(medicalData.weight) : null,
+          height: medicalData.height ? Number(medicalData.height) : null,
+          gender: medicalData.gender || null
           // profile_report_path: pdfUrl, // Uncomment if you add this column
         })
         .eq('id', user.id); // Ensures we update the correct user
@@ -162,6 +168,46 @@ export default function MedicalProfile() {
 
             {/* --- MANUAL INPUT FIELDS --- */}
             <div className="space-y-6">
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Gender</label>
+                  <select
+                    name="gender"
+                    value={medicalData.gender}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-xl focus:ring-2 focus:ring-teal-500 outline-none shadow-sm transition-colors"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Height (cm)</label>
+                  <input
+                    type="number"
+                    name="height"
+                    value={medicalData.height}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-xl focus:ring-2 focus:ring-teal-500 outline-none shadow-sm transition-colors"
+                    placeholder="e.g. 175"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Weight (kg)</label>
+                  <input
+                    type="number"
+                    name="weight"
+                    value={medicalData.weight}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-xl focus:ring-2 focus:ring-teal-500 outline-none shadow-sm transition-colors"
+                    placeholder="e.g. 70"
+                  />
+                </div>
+              </div>
+
               {/* Chronic Conditions */}
               <div>
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">

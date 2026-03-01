@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiSend, FiUser, FiCpu, FiPaperclip, FiX, FiImage, FiFileText } from 'react-icons/fi';
+import { supabase } from '../utils/SupabaseClient';
 
 export default function SymptomCheck() {
   const navigate = useNavigate();
@@ -8,17 +9,72 @@ export default function SymptomCheck() {
 
   // 1. STATE FOR MESSAGES & INPUT
   const [messages, setMessages] = useState([
-    { 
-      id: 1, 
-      sender: 'ai', 
-      text: "Hello! I am the MedIQ AI. I have reviewed your medical history. What symptoms are you experiencing today? You can also upload photos or lab reports." 
+    {
+      id: 1,
+      sender: 'ai',
+      text: "Hello! I am the MedIQ AI. I have reviewed your medical history. What symptoms are you experiencing today? You can also upload photos or lab reports."
     }
   ]);
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
-  
+
   // NEW: State to hold the currently selected file/image
   const [selectedFile, setSelectedFile] = useState(null);
+
+  // CHATBOT STATE
+  const [confirmedSymptoms, setConfirmedSymptoms] = useState([]);
+  const [deniedSymptoms, setDeniedSymptoms] = useState([]);
+  const [currentQuestionSymptomId, setCurrentQuestionSymptomId] = useState(null);
+
+  // NEW: Patient Profile State
+  const [patientProfile, setPatientProfile] = useState({
+    age: 30,
+    gender: "Male",
+    height_cm: 170.0,
+    weight_kg: 70.0,
+    smoker: false,
+    family_history: false
+  });
+
+  // Fetch true user profile on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('dob, gender, weight, height')
+          .eq('id', user.id)
+          .single();
+
+        if (profile && !error) {
+          let age = 30; // Default fallback
+          if (profile.dob) {
+            const birthDate = new Date(profile.dob);
+            const today = new Date();
+            age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+              age--;
+            }
+          }
+
+          setPatientProfile(prev => ({
+            ...prev,
+            age: age,
+            gender: profile.gender || "Male",
+            height_cm: profile.height ? Number(profile.height) : 170.0,
+            weight_kg: profile.weight ? Number(profile.weight) : 70.0,
+          }));
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+      }
+    };
+    fetchUserData();
+  }, []);
 
   // 2. AUTO-SCROLL TO BOTTOM OF CHAT
   useEffect(() => {
@@ -34,45 +90,113 @@ export default function SymptomCheck() {
   };
 
   // 4. HANDLE SENDING A MESSAGE
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
-    
+
     // Prevent sending if both input and file are empty
     if (!input.trim() && !selectedFile) return;
 
     // Add user message to chat, including the attachment if it exists
-    const userMsg = { 
-      id: Date.now(), 
-      sender: 'user', 
+    const userMsg = {
+      id: Date.now(),
+      sender: 'user',
       text: input,
       attachment: selectedFile ? { name: selectedFile.name, type: selectedFile.type } : null
     };
-    
+
     setMessages((prev) => [...prev, userMsg]);
+    const currentInput = input;
     setInput('');
     setSelectedFile(null); // Clear the attachment after sending
     setIsThinking(true);
 
-    // Simulate AI thinking and responding
-    setTimeout(() => {
-      const aiResponse = { 
-        id: Date.now() + 1, 
-        sender: 'ai', 
-        text: userMsg.attachment 
-          ? "I have analyzed the file you uploaded along with your symptoms. It appears to be consistent with your current condition, but I recommend having a specialist review these results."
-          : "I understand you're feeling that way. Based on your symptoms and history, it could be a mild viral infection, but we should monitor it. Do you have a fever or any shortness of breath?" 
+    let currentConfirmed = [...confirmedSymptoms];
+    let currentDenied = [...deniedSymptoms];
+
+    // Check if we are answering a follow-up question
+    if (currentQuestionSymptomId) {
+      const lowerInput = currentInput.trim().toLowerCase();
+      // Simple YES/NO heuristic
+      if (lowerInput === 'no' || lowerInput === 'n' || lowerInput === 'nope' || lowerInput.includes('not have') || lowerInput.includes("don't have")) {
+        currentDenied.push(currentQuestionSymptomId);
+      } else if (lowerInput === 'yes' || lowerInput === 'y' || lowerInput === 'yeah' || lowerInput === 'yep' || lowerInput.includes('do have')) {
+        currentConfirmed.push(currentQuestionSymptomId);
+      } else {
+        // If ambiguous, assume affirmative unless text contains "no "
+        if (lowerInput.includes('no ')) {
+          currentDenied.push(currentQuestionSymptomId);
+        } else {
+          currentConfirmed.push(currentQuestionSymptomId);
+        }
+      }
+      setCurrentQuestionSymptomId(null);
+    }
+
+    try {
+      // Call the Python FastAPI
+      const response = await fetch('http://127.0.0.1:8000/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          patient_profile: patientProfile,
+          new_text: currentInput,
+          confirmed_symptoms: currentConfirmed,
+          denied_symptoms: currentDenied
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+
+      // Update our stored state with whatever the backend extracted
+      if (data.confirmed_symptoms) setConfirmedSymptoms(data.confirmed_symptoms);
+      if (data.denied_symptoms) setDeniedSymptoms(data.denied_symptoms);
+
+      let aiResponseText = "";
+
+      if (data.type === "question") {
+        setCurrentQuestionSymptomId(data.symptom_id);
+        aiResponseText = data.question_text;
+      } else if (data.type === "report") {
+        aiResponseText = data.report || `Based on my analysis, you might have ${data.top_disease}.`;
+
+        // Reset the diagnosis state so the next message starts fresh!
+        setConfirmedSymptoms([]);
+        setDeniedSymptoms([]);
+        setCurrentQuestionSymptomId(null);
+      }
+
+      const aiResponse = {
+        id: Date.now() + 1,
+        sender: 'ai',
+        text: aiResponseText
       };
+
       setMessages((prev) => [...prev, aiResponse]);
+    } catch (error) {
+      console.error("Chatbot Error:", error);
+      const errorMsg = {
+        id: Date.now() + 1,
+        sender: 'ai',
+        text: "I'm having trouble connecting to my analysis engine right now. Please try again later."
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
       setIsThinking(false);
-    }, 2000);
+    }
   };
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-      
+
       {/* --- TOP NAVBAR --- */}
       <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center gap-4 z-10 shrink-0">
-        <button 
+        <button
           onClick={() => navigate('/dashboard')}
           className="p-2 text-slate-500 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 bg-slate-100 hover:bg-teal-50 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition cursor-pointer"
         >
@@ -87,29 +211,27 @@ export default function SymptomCheck() {
       {/* --- CHAT HISTORY AREA --- */}
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
         <div className="max-w-3xl mx-auto space-y-6">
-          
+
           {messages.map((msg) => (
             <div key={msg.id} className={`flex gap-4 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}>
-              
+
               {/* Avatar */}
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                msg.sender === 'user' 
-                  ? 'bg-teal-600 text-white' 
-                  : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-teal-600 dark:text-teal-400 shadow-sm'
-              }`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${msg.sender === 'user'
+                ? 'bg-teal-600 text-white'
+                : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-teal-600 dark:text-teal-400 shadow-sm'
+                }`}>
                 {msg.sender === 'user' ? <FiUser className="text-lg" /> : <FiCpu className="text-lg" />}
               </div>
 
               {/* Message Bubble container */}
               <div className={`flex flex-col gap-2 max-w-[75%] ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
-                
+
                 {/* RENDER ATTACHMENT IF IT EXISTS */}
                 {msg.attachment && (
-                  <div className={`flex items-center gap-3 p-3 rounded-xl shadow-sm border ${
-                    msg.sender === 'user' 
-                      ? 'bg-teal-700 border-teal-600 text-teal-50' 
-                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200'
-                  }`}>
+                  <div className={`flex items-center gap-3 p-3 rounded-xl shadow-sm border ${msg.sender === 'user'
+                    ? 'bg-teal-700 border-teal-600 text-teal-50'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200'
+                    }`}>
                     {msg.attachment.type.includes('image') ? <FiImage className="text-2xl opacity-80" /> : <FiFileText className="text-2xl opacity-80" />}
                     <div className="text-sm font-medium truncate max-w-[150px] sm:max-w-xs">
                       {msg.attachment.name}
@@ -119,11 +241,10 @@ export default function SymptomCheck() {
 
                 {/* RENDER TEXT MESSAGE */}
                 {msg.text && (
-                  <div className={`px-5 py-3.5 rounded-2xl shadow-sm text-sm sm:text-base leading-relaxed ${
-                    msg.sender === 'user'
-                      ? 'bg-teal-600 text-white rounded-tr-none'
-                      : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none'
-                  }`}>
+                  <div className={`px-5 py-3.5 rounded-2xl shadow-sm text-sm sm:text-base leading-relaxed whitespace-pre-wrap ${msg.sender === 'user'
+                    ? 'bg-teal-600 text-white rounded-tr-none'
+                    : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none'
+                    }`}>
                     {msg.text}
                   </div>
                 )}
@@ -145,14 +266,14 @@ export default function SymptomCheck() {
               </div>
             </div>
           )}
-          
+
           <div ref={chatEndRef} />
         </div>
       </main>
 
       {/* --- INPUT AREA --- */}
       <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 shrink-0">
-        
+
         {/* PREVIEW SELECTED FILE BEFORE SENDING */}
         {selectedFile && (
           <div className="max-w-3xl mx-auto mb-3 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-between border border-slate-200 dark:border-slate-700">
@@ -160,8 +281,8 @@ export default function SymptomCheck() {
               {selectedFile.type.includes('image') ? <FiImage className="text-teal-600 dark:text-teal-400 flex-shrink-0" /> : <FiFileText className="text-teal-600 dark:text-teal-400 flex-shrink-0" />}
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{selectedFile.name}</span>
             </div>
-            <button 
-              onClick={() => setSelectedFile(null)} 
+            <button
+              onClick={() => setSelectedFile(null)}
               className="text-slate-400 hover:text-red-500 transition"
               title="Remove attachment"
             >
@@ -172,16 +293,16 @@ export default function SymptomCheck() {
 
         {/* INPUT FORM */}
         <form onSubmit={handleSend} className="max-w-3xl mx-auto relative flex items-center gap-2">
-          
+
           {/* Attachment Button */}
           <label className="cursor-pointer p-4 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-full border border-slate-200 dark:border-slate-700 transition-colors flex-shrink-0">
             <FiPaperclip className="text-xl" />
             {/* Hidden file input */}
-            <input 
-              type="file" 
-              className="hidden" 
-              accept="image/*,.pdf,.doc,.docx" 
-              onChange={handleFileSelect} 
+            <input
+              type="file"
+              className="hidden"
+              accept="image/*,.pdf,.doc,.docx"
+              onChange={handleFileSelect}
               disabled={isThinking}
             />
           </label>

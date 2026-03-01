@@ -10,7 +10,23 @@ export default function ProfileSettings() {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // --- STATE: GENERAL PROFILE ---
+  // Helper to calculate BMI
+  const calculateBMI = (weight, height) => {
+    if (!weight || !height) return "Weight or Height is not provided. Cannot calculate BMI.";
+    const w = parseFloat(weight);
+    const h = parseFloat(height) / 100; // Convert cm to meters
+    if (w <= 0 || h <= 0) return "Invalid weight or height.";
+    const bmi = (w / (h * h)).toFixed(1);
+
+    let category = '';
+    if (bmi < 18.5) category = '(Underweight)';
+    else if (bmi < 25) category = '(Normal)';
+    else if (bmi < 30) category = '(Overweight)';
+    else category = '(Obese)';
+
+    return `${bmi} ${category}`;
+  };
+
   const [profileData, setProfileData] = useState({
     firstName: '',
     lastName: '',
@@ -20,7 +36,10 @@ export default function ProfileSettings() {
     state: '',
     country: '',
     pincode: '',
-    dob: ''
+    dob: '',
+    gender: '',
+    weight: '',
+    height: ''
   });
 
   // --- STATE: MEDICAL HISTORY ---
@@ -95,7 +114,10 @@ export default function ProfileSettings() {
           state: data.state || '',
           country: data.country || '',
           pincode: data.pincode || '',
-          dob: data.dob || ''
+          dob: data.dob || '',
+          gender: data.gender || '',
+          weight: data.weight || '',
+          height: data.height || ''
         });
       }
 
@@ -198,7 +220,10 @@ export default function ProfileSettings() {
             state: profileData.state,
             country: profileData.country,
             pincode: profileData.pincode,
-            dob: profileData.dob || null
+            dob: profileData.dob || null,
+            gender: profileData.gender || null,
+            weight: profileData.weight ? Number(profileData.weight) : null,
+            height: profileData.height ? Number(profileData.height) : null
           });
 
         if (error) throw error;
@@ -211,8 +236,8 @@ export default function ProfileSettings() {
             blood_group: medicalData.bloodGroup,
             chronic_conditions: medicalData.chronicConditions,
             current_medications: medicalData.currentMedications,
-            allergies: medicalData.allergies,
-            surgeries: medicalData.surgeries
+            allergies: medicalData.allergies || null,
+            surgeries: medicalData.surgeries || null
           }).eq('user_id', user.id);
           if (error) throw error;
         } else {
@@ -221,8 +246,8 @@ export default function ProfileSettings() {
             blood_group: medicalData.bloodGroup,
             chronic_conditions: medicalData.chronicConditions,
             current_medications: medicalData.currentMedications,
-            allergies: medicalData.allergies,
-            surgeries: medicalData.surgeries
+            allergies: medicalData.allergies || null,
+            surgeries: medicalData.surgeries || null
           }]);
           if (error) throw error;
         }
@@ -296,6 +321,15 @@ export default function ProfileSettings() {
                       <Input label="Email Address" name="email" type="email" value={profileData.email} onChange={handleChange} disabled={!isEditing} className={inputBaseClass} />
                       <Input label="Phone Number" name="phone" type="tel" value={profileData.phone} onChange={handleChange} disabled={!isEditing} className={inputBaseClass} />
                       <Input label="Date of Birth" name="dob" type="date" value={profileData.dob} onChange={handleChange} disabled={!isEditing} className={inputBaseClass} />
+                      <div className="flex flex-col gap-1">
+                        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Gender</label>
+                        <select name="gender" value={profileData.gender} onChange={handleChange} disabled={!isEditing} className={inputBaseClass}>
+                          <option value="">Select</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
                     </div>
                     <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
                       <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Location</h3>
@@ -306,6 +340,22 @@ export default function ProfileSettings() {
                         <Input label="Pincode" name="pincode" value={profileData.pincode} onChange={handleChange} disabled={!isEditing} className={inputBaseClass} />
                       </div>
                     </div>
+                    <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Physical Attributes</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Input label="Weight (kg)" name="weight" type="number" value={profileData.weight} onChange={handleChange} disabled={!isEditing} className={inputBaseClass} placeholder="e.g. 70" />
+                        <Input label="Height (cm)" name="height" type="number" value={profileData.height} onChange={handleChange} disabled={!isEditing} className={inputBaseClass} placeholder="e.g. 175" />
+                      </div>
+                    </div>
+
+                    {/* --- BMI DISPLAY --- */}
+                    <div className="mt-6 p-4 bg-teal-50 dark:bg-teal-900/10 rounded-xl border border-teal-100 dark:border-teal-900/30">
+                      <h3 className="text-sm font-semibold text-teal-800 dark:text-teal-400 mb-1">Calculated BMI</h3>
+                      <p className="text-sm text-slate-700 dark:text-slate-300">
+                        {calculateBMI(profileData.weight, profileData.height)}
+                      </p>
+                    </div>
+
                     {isEditing && (
                       <div className="pt-6 flex justify-end gap-3">
                         <button type="button" onClick={() => { fetchProfile(); setIsEditing(false); }} className="px-4 text-slate-500 hover:text-slate-700"> Cancel </button>
@@ -340,6 +390,7 @@ export default function ProfileSettings() {
                       <Input label="Allergies" name="allergies" value={medicalData.allergies} onChange={handleMedicalChange} disabled={!isEditing} className={inputBaseClass} placeholder="e.g. Penicillin, Peanuts" />
                       <Input label="Surgeries" name="surgeries" value={medicalData.surgeries} onChange={handleMedicalChange} disabled={!isEditing} className={inputBaseClass} placeholder="e.g. Appendectomy (2015)" />
                     </div>
+
                     {isEditing && (
                       <div className="pt-6 flex justify-end gap-3">
                         <button type="button" onClick={() => { fetchProfile(); setIsEditing(false); }} className="px-4 text-slate-500 hover:text-slate-700">Cancel</button>
