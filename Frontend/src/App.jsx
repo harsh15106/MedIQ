@@ -15,16 +15,7 @@ console.log("SUPABASE KEY:", import.meta.env.VITE_SUPABASE_ANON_KEY)
 
 function App() {
 
-  // Enforce dark mode on global app load/refresh
-  useEffect(() => {
-    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark');
-      localStorage.theme = 'dark'; // ensure it's set
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.theme = 'light';
-    }
-  }, []);
+  // Dark mode is globally removed.
 
   return (
     <Router>
@@ -34,11 +25,12 @@ function App() {
           toastOptions={{
             duration: 3000,
             style: {
-              background: '#334155', // slate-700
-              color: '#fff',
+              background: '#ffffff',
+              color: '#1e293b',
+              border: '1px solid #e2e8f0',
             },
             success: {
-              style: { background: '#0d9488', color: 'white' }, // teal-600
+              style: { background: '#2563eb', color: 'white' }, // blue-600
             },
             error: {
               style: { background: '#ef4444', color: 'white' }, // red-500
@@ -58,10 +50,10 @@ function App() {
           <Route path="/settings" element={<ProfileSettings />} />
 
           <Route path="*" element={
-            <div className="flex flex-col items-center justify-center min-h-screen dark:bg-slate-950">
-              <h1 className="text-4xl font-bold text-teal-600 mb-4">404</h1>
-              <p className="text-slate-600 dark:text-slate-400">Oops! The page you're looking for doesn't exist.</p>
-              <a href="/" className="mt-6 px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700">
+            <div className="flex flex-col items-center justify-center min-h-screen ">
+              <h1 className="text-4xl font-bold text-blue-600 mb-4">404</h1>
+              <p className="text-slate-600 ">Oops! The page you're looking for doesn't exist.</p>
+              <a href="/" className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700">
                 Go back home
               </a>
             </div>

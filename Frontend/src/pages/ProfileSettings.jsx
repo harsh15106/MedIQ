@@ -51,17 +51,6 @@ export default function ProfileSettings() {
     surgeries: ''
   });
 
-  // --- STATE: PREFERENCES ---
-  const [notifications, setNotifications] = useState({
-    securityAlerts: true,
-    healthReminders: true,
-    productUpdates: false,
-  });
-
-  const [privacy, setPrivacy] = useState({
-    aiTrainingConsent: false,
-  });
-
   // --- STATE: SECURITY ---
   const [securityData, setSecurityData] = useState({
     currentPassword: '',
@@ -148,15 +137,6 @@ export default function ProfileSettings() {
   const handleMedicalChange = (e) => {
     const { name, value } = e.target;
     setMedicalData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleToggle = (category, field) => {
-    if (category === 'notifications') {
-      setNotifications(prev => ({ ...prev, [field]: !prev[field] }));
-    } else {
-      setPrivacy(prev => ({ ...prev, [field]: !prev[field] }));
-    }
-    toast.success('Preference updated locally');
   };
 
   const handleSecurityChange = (e) => {
@@ -269,32 +249,85 @@ export default function ProfileSettings() {
     navigate('/dashboard');
   };
 
-  const inputBaseClass = "w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none text-sm shadow-sm transition-colors disabled:bg-slate-100 disabled:dark:bg-slate-800/50 disabled:text-slate-500 disabled:dark:text-slate-400 disabled:cursor-not-allowed bg-white dark:bg-slate-950 dark:text-white";
+  const inputBaseClass = "w-full px-4 py-3 border border-slate-200 rounded-[1rem] focus:ring-2 focus:ring-theme-accent outline-none text-sm shadow-sm transition-colors disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed bg-white font-light text-slate-700";
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center dark:bg-slate-950 dark:text-white">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-theme-surface text-theme-text transition-colors duration-300 pb-12 font-sans">
+        <nav className="bg-white/90 backdrop-blur-md shadow-sm border-b border-theme-bg-light/20 px-6 py-4 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto flex items-center gap-4">
+            <div className="w-10 h-10 bg-theme-bg-light/30 rounded-full animate-pulse"></div>
+            <div className="w-48 h-6 bg-theme-bg-light/30 rounded animate-pulse"></div>
+          </div>
+        </nav>
+
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+          <div className="flex flex-col md:flex-row gap-8">
+            <aside className="w-full md:w-64 shrink-0">
+              <div className="bg-white rounded-[2rem] shadow-sm border border-theme-bg-light/20 overflow-hidden py-2 animate-pulse">
+                <div className="flex flex-col gap-3 p-4">
+                  <div className="h-12 bg-theme-bg-light/20 rounded-xl"></div>
+                  <div className="h-12 bg-theme-bg-light/20 rounded-xl"></div>
+                  <div className="h-12 bg-theme-bg-light/20 rounded-xl"></div>
+                </div>
+              </div>
+            </aside>
+
+            <div className="flex-1">
+              <div className="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-theme-bg-light/20 animate-pulse">
+                <div className="h-8 bg-theme-bg-light/20 rounded w-1/3 mb-8"></div>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-2">
+                      <div className="h-4 bg-theme-bg-light/20 rounded w-1/4"></div>
+                      <div className="h-12 bg-theme-bg-light/20 rounded-[1rem]"></div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <div className="h-4 bg-theme-bg-light/20 rounded w-1/4"></div>
+                      <div className="h-12 bg-theme-bg-light/20 rounded-[1rem]"></div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <div className="h-4 bg-theme-bg-light/20 rounded w-1/4"></div>
+                      <div className="h-12 bg-theme-bg-light/20 rounded-[1rem]"></div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <div className="h-4 bg-theme-bg-light/20 rounded w-1/4"></div>
+                      <div className="h-12 bg-theme-bg-light/20 rounded-[1rem]"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300 pb-12">
-      <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm border-b border-slate-200 dark:border-slate-800 px-6 py-4 sticky top-0 z-50">
+    <div className="min-h-screen bg-theme-bg text-theme-text transition-colors duration-300 pb-12 font-sans relative overflow-x-hidden">
+
+      {/* Abstract light burst bg */}
+      <div className="absolute top-[10%] right-[-10%] w-[40%] h-[40%] bg-theme-accent opacity-[0.03] blur-[150px] rounded-full pointer-events-none"></div>
+
+      <nav className="bg-white/80 backdrop-blur-xl shadow-sm border-b border-theme-bg-light/30 px-6 py-4 sticky top-0 z-50 transition-colors duration-300">
         <div className="max-w-7xl mx-auto flex items-center gap-4">
-          <button onClick={handleBackNavigation} className="cursor-pointer p-2 text-slate-500 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 bg-slate-100 hover:bg-teal-50 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition">
+          <button onClick={handleBackNavigation} className="cursor-pointer p-2 text-theme-text-muted hover:text-theme-accent bg-theme-surface hover:bg-theme-bg-light/30 rounded-full transition">
             <FiArrowLeft className="text-xl" />
           </button>
-          <h1 className="text-xl font-bold text-slate-800 dark:text-white">Account Settings</h1>
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900">AI Model Preferences</h1>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative z-10">
         <div className="flex flex-col md:flex-row gap-8">
           <aside className="w-full md:w-64 shrink-0">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-sm border border-white overflow-hidden py-2 hover:shadow-md transition-shadow">
               <nav className="flex flex-col">
                 <TabButton id="general" icon={<FiUser />} label="General Info" active={activeTab} onClick={setActiveTab} />
                 <TabButton id="medical" icon={<FiActivity />} label="Medical History" active={activeTab} onClick={setActiveTab} />
                 <TabButton id="security" icon={<FiLock />} label="Security" active={activeTab} onClick={setActiveTab} />
-                <TabButton id="notifications" icon={<FiBell />} label="Notifications" active={activeTab} onClick={setActiveTab} />
-                <TabButton id="privacy" icon={<FiShield />} label="Privacy" active={activeTab} onClick={setActiveTab} />
-                <button onClick={handleLogout} className="w-full text-left flex items-center gap-3 px-6 py-4 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                <button onClick={handleLogout} className="w-full text-left flex items-center gap-3 px-6 py-4 text-sm font-medium text-red-500/80 hover:text-red-600 hover:bg-red-50/50 transition-colors cursor-pointer">
                   <FiLogOut /> Sign Out
                 </button>
               </nav>
@@ -302,14 +335,14 @@ export default function ProfileSettings() {
           </aside>
 
           <div className="flex-1">
-            <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+            <div className="bg-white/80 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-white transition-all hover:shadow-md">
 
               {activeTab === 'general' && (
                 <div className="animate-fade-in">
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold">Personal Information</h2>
+                    <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Personal Information</h2>
                     {!isEditing && (
-                      <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm font-medium">
+                      <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-theme-surface text-theme-accent hover:bg-theme-bg-light/30 rounded-[1rem] text-sm font-semibold transition-colors cursor-pointer border border-theme-accent/10">
                         <FiEdit2 /> Edit Profile
                       </button>
                     )}
@@ -322,7 +355,7 @@ export default function ProfileSettings() {
                       <Input label="Phone Number" name="phone" type="tel" value={profileData.phone} onChange={handleChange} disabled={!isEditing} className={inputBaseClass} />
                       <Input label="Date of Birth" name="dob" type="date" value={profileData.dob} onChange={handleChange} disabled={!isEditing} className={inputBaseClass} />
                       <div className="flex flex-col gap-1">
-                        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Gender</label>
+                        <label className="text-sm font-medium text-slate-700">Gender</label>
                         <select name="gender" value={profileData.gender} onChange={handleChange} disabled={!isEditing} className={inputBaseClass}>
                           <option value="">Select</option>
                           <option value="Male">Male</option>
@@ -331,8 +364,8 @@ export default function ProfileSettings() {
                         </select>
                       </div>
                     </div>
-                    <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Location</h3>
+                    <div className="pt-6 border-t border-theme-bg-light/20">
+                      <h3 className="text-xs font-semibold text-theme-accent opacity-80 uppercase tracking-widest mb-4">Location</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Input label="City" name="city" value={profileData.city} onChange={handleChange} disabled={!isEditing} className={inputBaseClass} />
                         <Input label="State" name="state" value={profileData.state} onChange={handleChange} disabled={!isEditing} className={inputBaseClass} />
@@ -340,8 +373,8 @@ export default function ProfileSettings() {
                         <Input label="Pincode" name="pincode" value={profileData.pincode} onChange={handleChange} disabled={!isEditing} className={inputBaseClass} />
                       </div>
                     </div>
-                    <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Physical Attributes</h3>
+                    <div className="pt-6 border-t border-theme-bg-light/20">
+                      <h3 className="text-xs font-semibold text-theme-accent opacity-80 uppercase tracking-widest mb-4">Physical Attributes</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Input label="Weight (kg)" name="weight" type="number" value={profileData.weight} onChange={handleChange} disabled={!isEditing} className={inputBaseClass} placeholder="e.g. 70" />
                         <Input label="Height (cm)" name="height" type="number" value={profileData.height} onChange={handleChange} disabled={!isEditing} className={inputBaseClass} placeholder="e.g. 175" />
@@ -349,17 +382,17 @@ export default function ProfileSettings() {
                     </div>
 
                     {/* --- BMI DISPLAY --- */}
-                    <div className="mt-6 p-4 bg-teal-50 dark:bg-teal-900/10 rounded-xl border border-teal-100 dark:border-teal-900/30">
-                      <h3 className="text-sm font-semibold text-teal-800 dark:text-teal-400 mb-1">Calculated BMI</h3>
-                      <p className="text-sm text-slate-700 dark:text-slate-300">
+                    <div className="mt-6 p-4 bg-theme-surface rounded-[1rem] border border-theme-bg-light/30">
+                      <h3 className="text-sm font-medium text-theme-accent mb-1">Calculated BMI</h3>
+                      <p className="text-sm text-theme-text/80 font-light">
                         {calculateBMI(profileData.weight, profileData.height)}
                       </p>
                     </div>
 
                     {isEditing && (
                       <div className="pt-6 flex justify-end gap-3">
-                        <button type="button" onClick={() => { fetchProfile(); setIsEditing(false); }} className="px-4 text-slate-500 hover:text-slate-700"> Cancel </button>
-                        <button type="submit" className="px-6 py-2.5 bg-teal-600 text-white rounded-lg font-bold">Save Changes</button>
+                        <button type="button" onClick={() => { fetchProfile(); setIsEditing(false); }} className="px-5 text-theme-text-muted hover:text-slate-900 cursor-pointer transition-colors font-medium"> Cancel </button>
+                        <button type="submit" className="px-6 py-3 bg-gradient-to-r from-theme-accent to-theme-accent-light text-white rounded-full font-semibold shadow-ai-glow hover:shadow-ai-glow-hover active:scale-95 transition-all duration-300 cursor-pointer">Save Changes</button>
                       </div>
                     )}
                   </form>
@@ -369,9 +402,9 @@ export default function ProfileSettings() {
               {activeTab === 'medical' && (
                 <div className="animate-fade-in">
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold">Medical History</h2>
+                    <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Medical History</h2>
                     {!isEditing && (
-                      <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm font-medium">
+                      <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-theme-surface text-theme-accent hover:bg-theme-bg-light/30 rounded-[1rem] text-sm font-semibold transition-colors cursor-pointer border border-theme-accent/10">
                         <FiEdit2 /> Edit History
                       </button>
                     )}
@@ -379,7 +412,7 @@ export default function ProfileSettings() {
                   <form onSubmit={handleSave} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex flex-col gap-1">
-                        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Blood Group</label>
+                        <label className="text-sm font-medium text-slate-700">Blood Group</label>
                         <select name="bloodGroup" value={medicalData.bloodGroup} onChange={handleMedicalChange} disabled={!isEditing} className={inputBaseClass}>
                           {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'Unknown'].map(bg => <option key={bg} value={bg}>{bg}</option>)}
                         </select>
@@ -393,38 +426,23 @@ export default function ProfileSettings() {
 
                     {isEditing && (
                       <div className="pt-6 flex justify-end gap-3">
-                        <button type="button" onClick={() => { fetchProfile(); setIsEditing(false); }} className="px-4 text-slate-500 hover:text-slate-700">Cancel</button>
-                        <button type="submit" className="px-6 py-2.5 bg-teal-600 text-white rounded-lg font-bold">Save Changes</button>
+                        <button type="button" onClick={() => { fetchProfile(); setIsEditing(false); }} className="px-5 text-theme-text-muted hover:text-slate-900 cursor-pointer transition-colors font-medium">Cancel</button>
+                        <button type="submit" className="px-6 py-3 bg-gradient-to-r from-theme-accent to-theme-accent-light text-white rounded-full font-semibold shadow-ai-glow hover:shadow-ai-glow-hover active:scale-95 transition-all duration-300 cursor-pointer">Save Changes</button>
                       </div>
                     )}
                   </form>
                 </div>
               )}
 
-              {activeTab === 'notifications' && (
-                <div className="space-y-6">
-                  <h2 className="text-2xl font-bold">Notifications</h2>
-                  <ToggleRow title="Security Alerts" description="Logins and password changes" checked={notifications.securityAlerts} onChange={() => handleToggle('notifications', 'securityAlerts')} />
-                  <ToggleRow title="Health Follow-ups" description="Reminders for check-ins" checked={notifications.healthReminders} onChange={() => handleToggle('notifications', 'healthReminders')} />
-                </div>
-              )}
-
-              {activeTab === 'privacy' && (
-                <div className="space-y-6">
-                  <h2 className="text-2xl font-bold">Privacy</h2>
-                  <ToggleRow title="AI Training" description="Anonymized data usage" checked={privacy.aiTrainingConsent} onChange={() => handleToggle('privacy', 'aiTrainingConsent')} />
-                </div>
-              )}
-
               {activeTab === 'security' && (
                 <div className="animate-fade-in">
                   <div className="mb-6">
-                    <h2 className="text-2xl font-bold">Password & Security</h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Update your password to keep your medical data secure.</p>
+                    <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Security Vault</h2>
+                    <p className="text-theme-text-muted text-sm mt-1 font-normal">Update your password to keep your health data encrypted.</p>
                   </div>
                   <form onSubmit={handlePasswordUpdate} className="space-y-6 max-w-md">
                     <div className="flex flex-col gap-1">
-                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Current Password</label>
+                      <label className="text-sm font-medium text-slate-700">Current Password</label>
                       <input
                         type="password"
                         name="currentPassword"
@@ -435,7 +453,7 @@ export default function ProfileSettings() {
                       />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">New Password</label>
+                      <label className="text-sm font-medium text-slate-700">New Password</label>
                       <input
                         type="password"
                         name="newPassword"
@@ -447,7 +465,7 @@ export default function ProfileSettings() {
                       />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Confirm New Password</label>
+                      <label className="text-sm font-medium text-slate-700">Confirm New Password</label>
                       <input
                         type="password"
                         name="confirmPassword"
@@ -462,9 +480,9 @@ export default function ProfileSettings() {
                       <button
                         type="submit"
                         disabled={isUpdatingPassword}
-                        className="px-6 py-2.5 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 transition shadow-sm disabled:opacity-50"
+                        className="px-6 py-3 bg-gradient-to-r from-theme-accent to-theme-accent-light text-white rounded-full font-semibold shadow-ai-glow hover:shadow-ai-glow-hover active:scale-95 disabled:opacity-50 transition-all duration-300 cursor-pointer"
                       >
-                        {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+                        {isUpdatingPassword ? 'Encrypting...' : 'Update Password'}
                       </button>
                     </div>
                   </form>
@@ -483,7 +501,7 @@ export default function ProfileSettings() {
 function TabButton({ id, icon, label, active, onClick }) {
   const isActive = active === id;
   return (
-    <button onClick={() => onClick(id)} className={`w-full text-left flex items-center gap-3 px-6 py-4 text-sm font-medium transition-colors ${isActive ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 border-l-4 border-teal-600' : 'text-slate-600 dark:text-slate-400 border-l-4 border-transparent hover:bg-slate-50'}`}>
+    <button onClick={() => onClick(id)} className={`w-full text-left flex items-center gap-3 px-6 py-4 text-sm font-medium transition-colors cursor-pointer ${isActive ? 'bg-theme-surface text-theme-accent border-l-4 border-theme-accent' : 'text-theme-text/80 font-light border-l-4 border-transparent hover:bg-theme-surface'}`}>
       {icon} {label}
     </button>
   );
@@ -492,29 +510,8 @@ function TabButton({ id, icon, label, active, onClick }) {
 function Input({ label, ...props }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</label>
+      <label className="text-sm font-medium text-slate-700">{label}</label>
       <input {...props} />
     </div>
-  );
-}
-
-function ToggleRow({ title, description, checked, onChange }) {
-  return (
-    <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-      <div>
-        <h3 className="font-semibold">{title}</h3>
-        <p className="text-xs text-slate-500">{description}</p>
-      </div>
-      <ToggleSwitch checked={checked} onChange={onChange} />
-    </div>
-  );
-}
-
-function ToggleSwitch({ checked, onChange }) {
-  return (
-    <label className="relative inline-flex items-center cursor-pointer">
-      <input type="checkbox" className="sr-only peer" checked={checked} onChange={onChange} />
-      <div className="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
-    </label>
   );
 }

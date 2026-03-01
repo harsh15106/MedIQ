@@ -1,2 +1,53 @@
 @import "tailwindcss";
-@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-theme-bg: #F4F8F8;
+  --color-theme-surface: #E6F2F2;
+  --color-theme-surface-alt: #DCEAEA;
+  --color-theme-accent: #2FA4A4;
+  --color-theme-accent-light: #38B2AC;
+  --color-theme-accent-dark: #0F2F2F;
+  --color-theme-accent-deep: #123E3E;
+  --color-theme-text: #0F1F1F;
+  --color-theme-text-muted: #4A5C5C;
+  --color-theme-text-light: #6B7C7C;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-inter: 'Inter', sans-serif;
+}
+
+@layer utilities {
+  .shadow-ai-glow {
+    box-shadow: 0 0 15px 2px rgba(47, 164, 164, 0.15);
+  }
+
+  .shadow-ai-glow-hover {
+    box-shadow: 0 0 25px 5px rgba(47, 164, 164, 0.25);
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(-45deg, #DCEAEA 40%, #E6F2F2 50%, #DCEAEA 60%);
+    background-size: 300%;
+    background-position-x: 100%;
+    animation: shimmer 1.5s infinite linear;
+  }
+
+  @keyframes shimmer {
+    to {
+      background-position-x: 0%;
+    }
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+@layer components {
+  button {
+    @apply cursor-pointer transition-all duration-200 active:scale-95 active:shadow-inner;
+  }
+}

@@ -98,57 +98,60 @@ export default function MedicalProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 font-sans text-slate-800 transition-colors duration-300">
+    <div className="min-h-screen bg-theme-bg py-12 px-4 sm:px-6 lg:px-8 font-sans text-theme-text transition-colors duration-300 relative overflow-hidden">
 
-      <div className="max-w-3xl mx-auto">
+      {/* Abstract light burst bg */}
+      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-theme-accent opacity-[0.03] blur-[150px] rounded-full mix-blend-multiply pointer-events-none"></div>
+
+      <div className="max-w-3xl mx-auto relative z-10">
 
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="inline-block bg-teal-100 dark:bg-slate-800 text-teal-800 dark:text-teal-400 px-4 py-1.5 rounded-full text-sm font-semibold mb-4 shadow-sm border border-teal-200 dark:border-slate-700">
-            Step 2 of 2: Medical History
+          <div className="inline-block bg-white/40 backdrop-blur-md text-theme-accent px-4 py-1.5 rounded-full text-xs font-bold mb-4 border border-white tracking-widest uppercase">
+            Step 2 of 2: Medical Initialization
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-3">
-            Help our AI understand you
+          <h1 className="text-3xl md:text-4xl font-semibold text-slate-900 tracking-tight mb-3">
+            Help the AI understand you
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 text-lg max-w-xl mx-auto">
-            Upload your existing health records or fill out the form below so MedIQ can provide personalized, accurate insights.
+          <p className="text-theme-text-muted text-lg max-w-xl mx-auto font-normal">
+            Upload your existing health records or fill out the form below so MedIQ can provide precise predictive insights.
           </p>
         </div>
 
         {/* Form Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-6 md:p-10 transition-colors duration-300">
+        <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-sm border border-white p-6 md:p-10 transition-colors duration-300">
 
           <form onSubmit={handleSubmit} className="space-y-8">
 
             {/* --- PDF UPLOAD SECTION --- */}
-            <div className="p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-950/50 text-center transition-colors">
+            <div className="p-6 border-2 border-dashed border-theme-bg-light/30 rounded-[1.5rem] bg-theme-surface text-center transition-colors">
               {!pdfFile ? (
                 <>
-                  <FiUploadCloud className="mx-auto text-4xl text-teal-500 mb-3" />
-                  <h3 className="text-base font-semibold text-slate-800 dark:text-white mb-1">Upload Medical Records</h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Fastest option: Upload a PDF of your clinic notes, lab results, or history.</p>
-                  <label className="cursor-pointer inline-flex items-center justify-center px-5 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+                  <FiUploadCloud className="mx-auto text-4xl text-theme-accent mb-3" />
+                  <h3 className="text-base font-medium text-slate-800 mb-1 tracking-tight">Upload Medical Records</h3>
+                  <p className="text-sm text-theme-text/80 font-light mb-4">Fastest option: Upload a PDF of your clinic notes, lab results, or history.</p>
+                  <label className="cursor-pointer inline-flex items-center justify-center px-5 py-2.5 border border-theme-bg-light/20 rounded-[1rem] shadow-sm text-sm font-medium text-theme-text bg-white hover:bg-theme-surface transition">
                     Browse Files
                     <input type="file" accept=".pdf" className="hidden" onChange={handleFileChange} />
                   </label>
-                  <p className="text-xs text-slate-400 mt-3">PDF up to 10MB</p>
+                  <p className="text-xs text-slate-400 mt-3 font-light">PDF up to 10MB</p>
                 </>
               ) : (
                 /* State when file is uploaded */
-                <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-4 border border-teal-200 dark:border-teal-900 rounded-lg shadow-sm">
+                <div className="flex items-center justify-between bg-white p-4 border border-theme-bg-light/20 rounded-[1rem] shadow-sm">
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="p-2 bg-teal-50 dark:bg-teal-900/30 rounded-lg text-teal-600 dark:text-teal-400">
+                    <div className="p-2 bg-theme-surface rounded-lg text-theme-accent">
                       <FiFileText className="text-xl" />
                     </div>
                     <div className="text-left truncate">
-                      <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">{pdfFile.name}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{(pdfFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                      <p className="text-sm font-medium text-slate-800 truncate">{pdfFile.name}</p>
+                      <p className="text-xs text-theme-text/60 font-light">{(pdfFile.size / 1024 / 1024).toFixed(2)} MB</p>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={removeFile}
-                    className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                    className="p-2 text-theme-text/60 hover:text-red-400 hover:bg-red-50 rounded-lg transition"
                     title="Remove File"
                   >
                     <FiTrash2 className="text-lg" />
@@ -159,11 +162,11 @@ export default function MedicalProfile() {
 
             {/* --- DIVIDER --- */}
             <div className="relative flex items-center">
-              <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-              <span className="flex-shrink-0 mx-4 text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-wider">
+              <div className="flex-grow border-t border-theme-bg-light/20"></div>
+              <span className="flex-shrink-0 mx-4 text-theme-text/40 text-xs font-semibold uppercase tracking-widest">
                 OR FILL MANUALLY
               </span>
-              <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+              <div className="flex-grow border-t border-theme-bg-light/20"></div>
             </div>
 
             {/* --- MANUAL INPUT FIELDS --- */}
@@ -171,12 +174,12 @@ export default function MedicalProfile() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Gender</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Gender</label>
                   <select
                     name="gender"
                     value={medicalData.gender}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-xl focus:ring-2 focus:ring-teal-500 outline-none shadow-sm transition-colors"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-[1rem] focus:ring-2 focus:ring-theme-accent outline-none shadow-sm transition-colors font-light text-slate-700"
                   >
                     <option value="">Select Gender</option>
                     <option value="Male">Male</option>
@@ -185,24 +188,24 @@ export default function MedicalProfile() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Height (cm)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Height (cm)</label>
                   <input
                     type="number"
                     name="height"
                     value={medicalData.height}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-xl focus:ring-2 focus:ring-teal-500 outline-none shadow-sm transition-colors"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-[1rem] focus:ring-2 focus:ring-theme-accent outline-none shadow-sm transition-colors font-light text-slate-700"
                     placeholder="e.g. 175"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Weight (kg)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Weight (kg)</label>
                   <input
                     type="number"
                     name="weight"
                     value={medicalData.weight}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-xl focus:ring-2 focus:ring-teal-500 outline-none shadow-sm transition-colors"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-[1rem] focus:ring-2 focus:ring-theme-accent outline-none shadow-sm transition-colors font-light text-slate-700"
                     placeholder="e.g. 70"
                   />
                 </div>
@@ -210,7 +213,7 @@ export default function MedicalProfile() {
 
               {/* Chronic Conditions */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   Chronic Conditions or Illnesses
                 </label>
                 <textarea
@@ -218,14 +221,14 @@ export default function MedicalProfile() {
                   value={medicalData.conditions}
                   onChange={handleChange}
                   rows="2"
-                  className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-xl focus:ring-2 focus:ring-teal-500 outline-none shadow-sm transition-colors resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[1rem] focus:ring-2 focus:ring-theme-accent outline-none shadow-sm transition-colors resize-none placeholder:text-slate-400 font-light text-slate-700"
                   placeholder="e.g., Asthma, Diabetes, Hypertension..."
                 ></textarea>
               </div>
 
               {/* Current Medications */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   Current Medications
                 </label>
                 <textarea
@@ -233,7 +236,7 @@ export default function MedicalProfile() {
                   value={medicalData.medications}
                   onChange={handleChange}
                   rows="2"
-                  className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-xl focus:ring-2 focus:ring-teal-500 outline-none shadow-sm transition-colors resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[1rem] focus:ring-2 focus:ring-theme-accent outline-none shadow-sm transition-colors resize-none placeholder:text-slate-400 font-light text-slate-700"
                   placeholder="e.g., Lisinopril 10mg daily, Vitamin D..."
                 ></textarea>
               </div>
@@ -241,7 +244,7 @@ export default function MedicalProfile() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Allergies */}
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Known Allergies
                   </label>
                   <textarea
@@ -249,14 +252,14 @@ export default function MedicalProfile() {
                     value={medicalData.allergies}
                     onChange={handleChange}
                     rows="2"
-                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-xl focus:ring-2 focus:ring-teal-500 outline-none shadow-sm transition-colors resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-[1rem] focus:ring-2 focus:ring-theme-accent outline-none shadow-sm transition-colors resize-none placeholder:text-slate-400 font-light text-slate-700"
                     placeholder="e.g., Penicillin, Peanuts..."
                   ></textarea>
                 </div>
 
                 {/* Past Surgeries */}
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Past Surgeries
                   </label>
                   <textarea
@@ -264,7 +267,7 @@ export default function MedicalProfile() {
                     value={medicalData.surgeries}
                     onChange={handleChange}
                     rows="2"
-                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-xl focus:ring-2 focus:ring-teal-500 outline-none shadow-sm transition-colors resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-[1rem] focus:ring-2 focus:ring-theme-accent outline-none shadow-sm transition-colors resize-none placeholder:text-slate-400 font-light text-slate-700"
                     placeholder="e.g., Appendectomy (2015)..."
                   ></textarea>
                 </div>
@@ -272,19 +275,19 @@ export default function MedicalProfile() {
             </div>
 
             {/* --- BUTTONS --- */}
-            <div className="pt-6 flex flex-col sm:flex-row gap-4 items-center justify-between border-t border-slate-100 dark:border-slate-800">
+            <div className="pt-6 flex flex-col sm:flex-row gap-4 items-center justify-between border-t border-theme-bg-light/20">
               <button
                 type="button"
                 onClick={handleSkip}
-                className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-medium transition order-2 sm:order-1  cursor-pointer"
+                className="text-theme-text-muted hover:text-theme-accent font-semibold transition-colors order-2 sm:order-1 cursor-pointer"
               >
                 Skip for now
               </button>
               <button
                 type="submit"
-                className="w-full sm:w-auto px-8 py-3 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 transition shadow-md order-1 sm:order-2 cursor-pointer"
+                className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-theme-accent to-theme-accent-light text-white rounded-full font-semibold shadow-ai-glow hover:shadow-ai-glow-hover active:scale-95 transition-all duration-300 order-1 sm:order-2 cursor-pointer flex justify-center items-center"
               >
-                Save & Continue
+                Save & Initialize AI
               </button>
             </div>
 

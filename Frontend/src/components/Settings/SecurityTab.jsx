@@ -33,7 +33,7 @@ export default function SecurityTab() {
     <div className="animate-fade-in space-y-8">
       <div>
         <h2 className="text-2xl font-bold tracking-tight mb-2">Password & Security</h2>
-        <p className="text-slate-500 dark:text-slate-400 text-sm">Update your password to keep your medical data secure.</p>
+        <p className="text-slate-500  text-sm">Update your password to keep your medical data secure.</p>
       </div>
 
       <form onSubmit={handlePasswordUpdate} className="max-w-md space-y-4">
@@ -43,7 +43,7 @@ export default function SecurityTab() {
             type="password" 
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg dark:bg-slate-950 outline-none focus:ring-2 focus:ring-teal-500"
+            className="w-full px-4 py-2 border border-slate-300  rounded-lg  outline-none focus:ring-2 focus:ring-teal-500"
             required
           />
         </div>
@@ -53,7 +53,7 @@ export default function SecurityTab() {
             type="password" 
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg dark:bg-slate-950 outline-none focus:ring-2 focus:ring-teal-500"
+            className="w-full px-4 py-2 border border-slate-300  rounded-lg  outline-none focus:ring-2 focus:ring-teal-500"
             required
           />
         </div>

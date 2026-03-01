@@ -37,7 +37,7 @@ export default function Login() {
       <form className="space-y-4" onSubmit={handleSubmit}>
         {/* Email Field */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+          <label className="text-sm font-semibold text-slate-700 ">
             Email Address <span className="text-red-500">*</span>
           </label>
           <input
@@ -46,13 +46,13 @@ export default function Login() {
             placeholder="your@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="px-3 py-2 border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-teal-500 outline-none text-sm shadow-sm transition-colors"
+            className="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-theme-accent outline-none text-sm transition-colors bg-white/50 backdrop-blur-sm"
           />
         </div>
 
         {/* Password Field */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+          <label className="text-sm font-semibold text-slate-700 ">
             Password <span className="text-red-500">*</span>
           </label>
           <div className="relative">
@@ -62,12 +62,12 @@ export default function Login() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-teal-500 outline-none text-sm shadow-sm pr-10 transition-colors"
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-theme-accent outline-none text-sm pr-10 transition-colors bg-white/50 backdrop-blur-sm"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 transition"
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-theme-accent transition-colors"
             >
               {showPassword ? <FiEyeOff className="text-lg" /> : <FiEye className="text-lg" />}
             </button>
@@ -78,9 +78,9 @@ export default function Login() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 transition shadow-md disabled:opacity-50"
+          className="w-full py-3.5 bg-gradient-to-r from-theme-accent to-theme-accent-light text-white font-semibold rounded-full hover:-translate-y-0.5 active:scale-95 transition-all duration-300 disabled:opacity-50 shadow-ai-glow hover:shadow-ai-glow-hover flex justify-center items-center mt-6 cursor-pointer"
         >
-          {loading ? 'Verifying...' : 'Sign In'}
+          {loading ? 'Verifying Neural Match...' : 'Access AI Dashboard'}
         </button>
       </form>
     </div>

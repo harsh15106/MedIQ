@@ -27,44 +27,83 @@ export default function AuthPage() {
   };
 
   return (
-    // Added dark:bg-slate-950 for the main background
-    <div className="min-h-screen bg-teal-50 dark:bg-slate-950 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans text-slate-800 transition-colors duration-300 relative">
-      
-      <button 
-        onClick={() => navigate('/')} 
-        className="absolute top-6 left-6 sm:top-10 sm:left-10 flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 font-semibold transition group"
+    <div className="min-h-screen bg-theme-bg flex flex-col lg:flex-row font-sans text-theme-text transition-colors duration-300 relative overflow-hidden">
+
+      {/* Back Button */}
+      <button
+        onClick={() => navigate('/')}
+        className="absolute top-6 left-6 z-20 flex items-center gap-2 text-theme-surface-alt hover:text-white font-medium transition-colors group px-4 py-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10"
       >
         <FiArrowLeft className="text-xl transform group-hover:-translate-x-1 transition" />
-        Back to Home
+        Back
       </button>
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mt-8 sm:mt-0">
-        <Link to="/" className="inline-flex items-center gap-2 font-bold text-3xl text-teal-600 dark:text-teal-400 mb-6">
-          <span className="text-4xl">⚕️</span> MedIQ
-        </Link>
-        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-          {isLogin ? 'Sign in to your account' : 'Create your health profile'}
-        </h2>
-      </div>
+      {/* Left Side: Brand & Messaging (Dark AI Theme) */}
+      <div className="w-full lg:w-5/12 bg-gradient-to-br from-theme-accent-dark to-theme-accent-deep border-r border-white/10 flex flex-col justify-center p-12 lg:p-20 relative overflow-hidden min-h-[40vh] lg:min-h-screen">
+        {/* Subtle abstract background */}
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.2) 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-theme-accent opacity-20 blur-[100px] rounded-full mix-blend-screen"></div>
 
-      <div className={`mt-8 sm:mx-auto sm:w-full transition-all duration-300 ${isLogin ? 'sm:max-w-md' : 'sm:max-w-2xl'}`}>
-        {/* Added dark:bg-slate-900 and dark:border-slate-800 for the card */}
-        <div className="bg-white dark:bg-slate-900 py-8 px-4 shadow-xl rounded-2xl sm:px-10 border border-teal-100 dark:border-slate-800 transition-colors duration-300">
-          
-          {isLogin ? <Login /> : <Signup />}
+        <div className="relative z-10 flex flex-col h-full justify-between">
+          <div>
+            <Link to="/" className="inline-flex items-center gap-2 font-semibold text-3xl text-white tracking-tight">
+              <img src="/LOGO.png" alt="MedIQ Logo" className="w-10 h-10 object-contain" /> MedIQ
+            </Link>
+          </div>
 
-          <p className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400">
-            {isLogin ? "New to MedIQ? " : "Already have an account? "}
-            <button 
-              onClick={toggleMode}
-              className="font-bold text-teal-600 dark:text-teal-400 hover:underline transition"
-            >
-              {isLogin ? 'Register now' : 'Log in here'}
-            </button>
-          </p>
-          
+          <div className="mt-16 lg:mt-0">
+            <div className="inline-block bg-white/10 backdrop-blur-sm border border-white/10 text-theme-surface-alt px-4 py-1.5 rounded-full text-xs font-semibold mb-6 tracking-widest uppercase">
+              Secure Access
+            </div>
+            <h1 className="text-4xl lg:text-5xl font-semibold text-white tracking-tight leading-[1.1] mb-6">
+              Your Health <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-theme-accent-light">
+                Intelligence
+              </span> <br /> Starts Here.
+            </h1>
+            <p className="text-theme-surface-alt opacity-90 text-lg font-normal max-w-sm">
+              Log in or create an account to access real-time symptom analysis and predictive risk modeling.
+            </p>
+          </div>
         </div>
       </div>
+
+      {/* Right Side: Glassmorphism Form */}
+      <div className="w-full lg:w-7/12 flex items-center justify-center p-6 sm:p-12 relative bg-theme-bg">
+
+        <div className={`w-full transition-all duration-500 ${isLogin ? 'max-w-md' : 'max-w-2xl'}`}>
+
+          <div className="text-center mb-8 lg:hidden">
+            <h2 className="text-3xl font-semibold text-slate-900 tracking-tight">
+              {isLogin ? 'Sign In to MedIQ' : 'Create Free Account'}
+            </h2>
+          </div>
+
+          {/* Glassmorphism Card */}
+          <div className="bg-white/70 backdrop-blur-xl p-8 sm:p-10 shadow-sm border border-white/50 rounded-3xl relative group hover:shadow-ai-glow transition-all duration-500">
+
+            {/* Soft teal border glow effect via pseudo-element illusion */}
+            <div className="absolute inset-0 rounded-3xl border border-theme-accent/0 pointer-events-none group-hover:border-theme-accent/30 transition-colors duration-500"></div>
+
+            <div className="relative z-10">
+              {isLogin ? <Login /> : <Signup />}
+
+              <p className="mt-8 text-center text-sm text-theme-text-muted">
+                {isLogin ? "New to MedIQ? " : "Already have an account? "}
+                <button
+                  onClick={toggleMode}
+                  className="font-semibold text-theme-accent hover:text-theme-accent-light transition-colors ml-1"
+                >
+                  {isLogin ? 'Create free account' : 'Sign in here'}
+                </button>
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
     </div>
   );
 }

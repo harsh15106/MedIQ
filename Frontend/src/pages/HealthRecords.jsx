@@ -225,11 +225,11 @@ export default function HealthRecords() {
   const handleDocumentDelete = (docId, filePath) => {
     toast((t) => (
       <div className="flex flex-col gap-3">
-        <p className="font-semibold text-slate-800 dark:text-slate-200">Are you sure you want to delete this document permanently?</p>
+        <p className="font-semibold text-slate-800 ">Are you sure you want to delete this document permanently?</p>
         <div className="flex justify-end gap-2">
           <button
             onClick={() => toast.dismiss(t.id)}
-            className="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition cursor-pointer"
+            className="px-3 py-1.5 text-sm font-medium text-slate-600  hover:bg-slate-100  rounded-md transition cursor-pointer"
           >
             Cancel
           </button>
@@ -265,64 +265,108 @@ export default function HealthRecords() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300 pb-12">
+    <div className="min-h-screen bg-theme-bg text-theme-text transition-colors duration-300 pb-12 font-sans relative overflow-x-hidden">
+
+      {/* Abstract light burst bg */}
+      <div className="absolute top-[10%] left-[-10%] w-[40%] h-[40%] bg-theme-accent opacity-[0.03] blur-[150px] rounded-full pointer-events-none"></div>
+      <div className="absolute bottom-[10%] right-[-10%] w-[30%] h-[30%] bg-theme-accent-dark opacity-[0.02] blur-[150px] rounded-full pointer-events-none"></div>
 
       {/* Top Navigation */}
-      <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm border-b border-slate-200 dark:border-slate-800 px-6 py-4 sticky top-0 z-50">
+      <nav className="bg-white/80 backdrop-blur-xl shadow-sm border-b border-theme-bg-light/30 px-6 py-4 sticky top-0 z-50 transition-colors duration-300">
         <div className="max-w-7xl mx-auto flex items-center gap-4">
           <button
             onClick={() => navigate('/dashboard')}
-            className="p-2 text-slate-500 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 bg-slate-100 hover:bg-teal-50 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-full transition cursor-pointer"
+            className="p-2 text-theme-text-muted hover:text-theme-accent bg-theme-surface hover:bg-theme-bg-light/30 rounded-full transition cursor-pointer"
           >
             <FiArrowLeft className="text-xl" />
           </button>
-          <h1 className="text-xl font-bold text-slate-800 dark:text-white">My Health Records</h1>
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900">Health Data Vault</h1>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
           {/* ==========================================
               LEFT COLUMN: PAST REPORTS & HISTORY
               ========================================== */}
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight">Medical Profile</h2>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-900 px-1">Medical Profile</h2>
 
-            <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-              <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
-                <FiClock /> Last updated: {isFetchingData ? "..." : profileData.lastUpdated}
-              </div>
-
-              <div className="space-y-5">
-                <div>
-                  <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Chronic Conditions</h3>
-                  <p className="font-medium text-slate-800 dark:text-slate-200">{profileData.conditions}</p>
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Current Medications</h3>
-                  <p className="font-medium text-slate-800 dark:text-slate-200">{profileData.medications}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Allergies</h3>
-                    <p className="font-medium text-slate-800 dark:text-slate-200">{profileData.allergies}</p>
+            <div className="bg-white/80 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-white transition-all hover:border-theme-accent/30 hover:shadow-md">
+              {isFetchingData ? (
+                <div className="animate-pulse space-y-5">
+                  <div className="flex items-center gap-2 text-sm text-theme-text/60 font-light mb-6 pb-4 border-b border-theme-surface">
+                    <FiClock /> Last updated: ...
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Surgeries</h3>
-                    <p className="font-medium text-slate-800 dark:text-slate-200">{profileData.surgeries}</p>
+                    <div className="h-3 w-32 bg-theme-bg-light/30 rounded mb-2"></div>
+                    <div className="h-4 w-48 bg-theme-surface rounded"></div>
+                  </div>
+                  <div>
+                    <div className="h-3 w-32 bg-theme-bg-light/30 rounded mb-2"></div>
+                    <div className="h-4 w-48 bg-theme-surface rounded"></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="h-3 w-24 bg-theme-bg-light/30 rounded mb-2"></div>
+                      <div className="h-4 w-32 bg-theme-surface rounded"></div>
+                    </div>
+                    <div>
+                      <div className="h-3 w-24 bg-theme-bg-light/30 rounded mb-2"></div>
+                      <div className="h-4 w-32 bg-theme-surface rounded"></div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 text-sm text-theme-text/60 font-light mb-6 pb-4 border-b border-theme-surface">
+                    <FiClock /> Last updated: {profileData.lastUpdated}
+                  </div>
+
+                  <div className="space-y-5">
+                    <div>
+                      <h3 className="text-xs font-semibold text-theme-accent opacity-80 uppercase tracking-wider mb-1">Chronic Conditions</h3>
+                      <p className="font-medium text-slate-800">{profileData.conditions}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-semibold text-theme-accent opacity-80 uppercase tracking-wider mb-1">Current Medications</h3>
+                      <p className="font-medium text-slate-800">{profileData.medications}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h3 className="text-xs font-semibold text-theme-accent opacity-80 uppercase tracking-wider mb-1">Allergies</h3>
+                        <p className="font-medium text-slate-800">{profileData.allergies}</p>
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-semibold text-theme-accent opacity-80 uppercase tracking-wider mb-1">Surgeries</h3>
+                        <p className="font-medium text-slate-800">{profileData.surgeries}</p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Display Previously Uploaded Documents */}
-            <h3 className="text-lg font-bold mt-8 mb-4">Past Documents</h3>
+            <h3 className="text-lg font-semibold tracking-tight text-slate-900 mt-8 mb-4 px-1">Secured Documents</h3>
             <div className="space-y-3">
               {isFetchingData ? (
-                <div className="text-sm text-slate-500 animate-pulse">Loading documents...</div>
+                <div className="space-y-3">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="bg-white p-4 rounded-3xl shadow-sm border border-theme-bg-light/20 flex items-center justify-between animate-pulse">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 bg-theme-surface rounded-2xl w-12 h-12"></div>
+                        <div className="space-y-2">
+                          <div className="h-3 w-32 bg-theme-bg-light/30 rounded"></div>
+                          <div className="h-2 w-24 bg-theme-surface rounded"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : pastDocuments.length === 0 ? (
-                <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-center text-sm text-slate-500 dark:text-slate-400">
+                <div className="bg-theme-surface p-6 rounded-[1.5rem] border border-dashed border-theme-bg-light/30 text-center text-sm text-theme-text/80 font-light">
                   No documents uploaded yet.
                 </div>
               ) : (
@@ -332,14 +376,14 @@ export default function HealthRecords() {
                   const cleanName = fileName.includes('-') ? fileName.split('-').slice(1).join('-') : fileName;
 
                   return (
-                    <div key={idx} className="group bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 flex items-center justify-between transition hover:border-teal-300 dark:hover:border-teal-700">
+                    <div key={idx} className="group bg-white/80 backdrop-blur-md p-4 rounded-3xl shadow-sm border border-white flex items-center justify-between transition hover:shadow-md hover:border-theme-accent/30 cursor-default">
                       <div className="flex items-center gap-3 overflow-hidden pr-4">
-                        <div className="p-3 bg-teal-50 dark:bg-teal-900/30 rounded-lg text-teal-600 dark:text-teal-400 shrink-0">
+                        <div className="p-3 bg-theme-surface rounded-2xl text-theme-accent shrink-0 transition-colors group-hover:bg-theme-bg-light/20">
                           <FiFileText className="text-xl" />
                         </div>
                         <div className="truncate">
-                          <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">{cleanName}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                          <p className="text-sm font-medium text-slate-800 truncate">{cleanName}</p>
+                          <p className="text-xs text-theme-text/60 font-light mt-0.5">
                             Uploaded {new Date(doc.created_at).toLocaleDateString()}
                           </p>
                         </div>
@@ -357,13 +401,13 @@ export default function HealthRecords() {
                               window.open(data.signedUrl, '_blank');
                             }
                           }}
-                          className="text-sm font-medium text-teal-600 dark:text-teal-400 hover:underline cursor-pointer"
+                          className="text-sm font-medium text-theme-accent hover:opacity-80 cursor-pointer transition-opacity"
                         >
                           View
                         </button>
                         <button
                           onClick={() => handleDocumentDelete(doc.id, doc.file_path)}
-                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition cursor-pointer"
+                          className="p-1.5 text-theme-text/40 hover:text-red-400 hover:bg-red-50 rounded-md transition cursor-pointer"
                           title="Delete Document"
                         >
                           <FiTrash2 className="text-lg" />
@@ -377,23 +421,23 @@ export default function HealthRecords() {
 
             {/* AI HEALTH MODEL INSIGHTS UI */}
             {modelInsights && (
-              <div className="mt-8 animate-fade-in bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-slate-900 dark:to-slate-800 p-6 rounded-2xl border border-teal-100 dark:border-teal-900 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                  <FiClock className="text-6xl text-teal-600 dark:text-teal-400" />
+              <div className="mt-8 animate-fade-in bg-theme-bg-light/10 p-6 md:p-8 rounded-[2rem] border border-theme-bg-light/30 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-5 transform scale-150 -translate-y-4 translate-x-4 pointer-events-none">
+                  <FiClock className="text-6xl text-theme-accent" />
                 </div>
                 <div className="flex items-center gap-3 mb-4 relative z-10">
-                  <div className="p-2 bg-teal-600 text-white rounded-lg shadow-sm">
+                  <div className="p-2 bg-theme-accent text-white rounded-[1rem] shadow-sm">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">MedIQ AI Insight</h3>
+                  <h3 className="text-lg font-medium text-slate-800 tracking-tight">MedIQ AI Insight</h3>
                 </div>
 
                 <div className="space-y-4 relative z-10">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Determined Risk Level:</span>
-                    <span className={`px-3 py-1 text-xs font-bold rounded-full ${modelInsights.riskLevel === 'High' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                      modelInsights.riskLevel === 'Moderate' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                        'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                    <span className="text-sm font-medium text-theme-text/80">Determined Risk Level:</span>
+                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${modelInsights.riskLevel === 'High' ? 'bg-red-50 text-red-600 border border-red-100' :
+                      modelInsights.riskLevel === 'Moderate' ? 'bg-yellow-50 text-yellow-700 border border-yellow-100' :
+                        'bg-theme-bg-light/30 text-theme-accent border border-theme-accent/20'
                       }`}>
                       {modelInsights.riskLevel}
                     </span>
@@ -401,8 +445,8 @@ export default function HealthRecords() {
 
                   <ul className="space-y-2 mt-4">
                     {modelInsights.insights.map((insight, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                        <span className="text-teal-500 mt-0.5">•</span>
+                      <li key={idx} className="flex items-start gap-2 text-sm text-theme-text/80 leading-relaxed font-light">
+                        <span className="text-theme-accent mt-0.5">•</span>
                         {insight}
                       </li>
                     ))}
@@ -410,7 +454,7 @@ export default function HealthRecords() {
                 </div>
                 <button
                   onClick={() => setModelInsights(null)}
-                  className="mt-6 text-xs font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 underline cursor-pointer"
+                  className="mt-6 text-xs font-medium text-theme-accent hover:opacity-80 transition-opacity cursor-pointer border-b border-theme-accent/30 pb-0.5"
                 >
                   Dismiss Insight
                 </button>
@@ -421,40 +465,40 @@ export default function HealthRecords() {
 
           {/*RIGHT COLUMN: ADD NEW RECORD */}
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight">Add New Record</h2>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-900 px-1">Add New Record</h2>
 
             <form
               onSubmit={handleSubmitNewRecord}
-              className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-6"
+              className="bg-white/80 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-white space-y-6 transition-all hover:shadow-md hover:border-theme-accent/20"
             >
               {/* PDF / Image Upload Area */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
+                <label className="block text-sm font-medium text-slate-700 mb-3">
                   Upload Report (Lab results, prescriptions, etc.)
                 </label>
 
-                <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-950/50 p-6 text-center transition-colors">
+                <div className="border-2 border-dashed border-theme-bg-light/30 rounded-[1.5rem] bg-theme-surface p-6 text-center transition-colors">
                   {!newFile ? (
                     <>
-                      <FiUploadCloud className="mx-auto text-3xl text-teal-500 mb-3" />
-                      <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">Drag and drop or click to browse</p>
-                      <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+                      <FiUploadCloud className="mx-auto text-3xl text-theme-accent mb-3" />
+                      <p className="text-sm text-theme-text/80 font-light mb-4">Drag and drop or click to browse</p>
+                      <label className="cursor-pointer inline-flex items-center justify-center px-4 py-2 border border-theme-bg-light/20 rounded-[1rem] shadow-sm text-sm font-medium text-theme-text bg-white hover:bg-theme-surface transition">
                         Select File
                         <input type="file" className="hidden" onChange={handleFileChange} />
                       </label>
                     </>
                   ) : (
-                    <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-4 border border-teal-200 dark:border-teal-900 rounded-lg shadow-sm">
+                    <div className="flex items-center justify-between bg-white p-4 border border-theme-bg-light/20 rounded-[1rem] shadow-sm">
                       <div className="flex items-center gap-3 overflow-hidden">
-                        <FiFileText className="text-2xl text-teal-600 dark:text-teal-400 flex-shrink-0" />
-                        <span className="text-sm font-semibold text-slate-800 dark:text-white truncate">
+                        <FiFileText className="text-2xl text-theme-accent flex-shrink-0" />
+                        <span className="text-sm font-medium text-slate-800 truncate">
                           {newFile.name}
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={handleRemoveFile}
-                        className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                        className="p-2 text-theme-text/60 hover:text-red-400 hover:bg-red-50 rounded-lg transition"
                       >
                         <FiTrash2 />
                       </button>
@@ -465,7 +509,7 @@ export default function HealthRecords() {
 
               {/* Lab Results & Vitals */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
+                <label className="block text-sm font-medium text-slate-700 mb-3">
                   Lab Results & Vitals (Optional)
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -481,7 +525,7 @@ export default function HealthRecords() {
                     { label: "MCV", name: "mcv", placeholder: "fL" },
                   ].map((field) => (
                     <div key={field.name}>
-                      <span className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{field.label}</span>
+                      <span className="block text-xs font-medium text-theme-text/80 mb-1">{field.label}</span>
                       <input
                         type="number"
                         step="any"
@@ -489,7 +533,7 @@ export default function HealthRecords() {
                         value={healthMetrics[field.name]}
                         onChange={handleMetricChange}
                         placeholder={field.placeholder}
-                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-lg focus:ring-2 focus:ring-teal-500 outline-none shadow-sm transition-colors text-sm placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-theme-accent outline-none shadow-sm transition-colors text-sm placeholder:text-slate-400 font-light text-slate-700"
                       />
                     </div>
                   ))}
@@ -498,14 +542,14 @@ export default function HealthRecords() {
 
               {/* Manual Input Note Field */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   Additional Notes or Details
                 </label>
                 <textarea
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
                   rows="4"
-                  className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-xl focus:ring-2 focus:ring-teal-500 outline-none shadow-sm transition-colors resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-[1rem] focus:ring-2 focus:ring-theme-accent outline-none shadow-sm transition-colors resize-none placeholder:text-slate-400 font-light text-slate-700"
                   placeholder="e.g., Doctor advised lowering sodium intake after reviewing these latest results..."
                 ></textarea>
               </div>
@@ -514,7 +558,7 @@ export default function HealthRecords() {
               <button
                 type="submit"
                 disabled={isAnalyzing}
-                className="w-full py-3 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 transition shadow-md cursor-pointer disabled:opacity-75 disabled:cursor-wait flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-gradient-to-r from-theme-accent to-theme-accent-light text-white rounded-full font-semibold shadow-ai-glow hover:shadow-ai-glow-hover active:scale-95 transition-all duration-300 cursor-pointer disabled:opacity-75 disabled:cursor-wait flex items-center justify-center gap-2"
               >
                 {isAnalyzing ? (
                   <>

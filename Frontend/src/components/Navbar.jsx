@@ -1,71 +1,69 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { FiSun, FiMoon } from 'react-icons/fi';
+import { Link, useLocation } from 'react-router-dom';
 
 export default function Navbar() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
-    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    } else {
-      setIsDarkMode(false);
-      document.documentElement.classList.remove('dark');
-    }
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const toggleTheme = () => {
-    if (isDarkMode) {
-      document.documentElement.classList.remove('dark');
-      localStorage.theme = 'light';
-      setIsDarkMode(false);
-    } else {
-      document.documentElement.classList.add('dark');
-      localStorage.theme = 'dark';
-      setIsDarkMode(true);
+  const scrollToTop = (e) => {
+    if (location.pathname === '/') {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   return (
-    // Added backdrop-blur and a semi-transparent dark background for a premium feel
-    <nav className="bg-white/80 dark:bg-slate-950/80 backdrop-blur-md shadow-sm fixed w-full z-50 top-0 border-b border-gray-100 dark:border-slate-800 transition-colors duration-300">
+    <nav className={`fixed w-full z-50 top-0 transition-all duration-500 ease-in-out ${isScrolled
+      ? 'bg-white/80 backdrop-blur-xl border-b border-theme-bg-light/20 shadow-lg py-2'
+      : 'bg-transparent border-b border-transparent py-3'
+      }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
-          
-          <Link to="/" className="flex-shrink-0 flex items-center gap-2 font-bold text-2xl text-teal-600 dark:text-teal-400">
-            <span className="text-3xl">⚕️</span> MedIQ
+        <div className="flex justify-between h-12 items-center">
+
+          <Link
+            to="/"
+            onClick={scrollToTop}
+            className={`flex-shrink-0 flex items-center gap-2 font-semibold text-2xl tracking-tight transition-colors duration-300 ${isScrolled ? 'text-theme-accent' : 'text-white'}`}
+          >
+            <img src="/LOGO.png" alt="MedIQ Logo" className="w-8 h-8 object-contain" /> MedIQ
           </Link>
 
-          <div className="hidden md:flex space-x-8">
-            <a href="#features" className="text-gray-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 font-medium transition">Features</a>
-            <a href="#faq" className="text-gray-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 font-medium transition">FAQ</a>
-            <a href="#contact" className="text-gray-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 font-medium transition">Contact</a>
+          <div className="hidden md:flex space-x-8 items-center">
+            {['How It Works', 'Features', 'Accuracy'].map((item) => (
+              <a
+                key={item}
+                href={`#${item.toLowerCase().replace(/ /g, '-')}`}
+                className={`text-sm font-medium tracking-wide transition-all duration-300 hover:scale-105 active:scale-95 ${isScrolled ? 'text-theme-text/70 hover:text-theme-accent' : 'text-white/80 hover:text-white'
+                  }`}
+              >
+                {item}
+              </a>
+            ))}
           </div>
 
           <div className="flex space-x-4 items-center">
-            {/* Dark Mode Toggle */}
-            <button 
-              onClick={toggleTheme} 
-              className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition"
-            >
-              {isDarkMode ? <FiSun className="text-xl" /> : <FiMoon className="text-xl" />}
-            </button>
-
-            <Link 
-              to="/auth?mode=login" 
-              className="text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 px-3 py-2 rounded-md font-medium transition"
+            <Link
+              to="/auth?mode=login"
+              className={`text-sm font-medium transition-colors duration-300 hover:opacity-80 ${isScrolled ? 'text-theme-text/80' : 'text-white'}`}
             >
               Login
             </Link>
-            <Link 
-              to="/auth?mode=signup" 
-              className="bg-teal-600 text-white hover:bg-teal-500 px-5 py-2 rounded-md font-medium transition shadow-sm"
+            <Link
+              to="/auth?mode=signup"
+              className="bg-theme-accent text-white hover:bg-theme-accent-light px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95"
             >
               Sign Up
             </Link>
           </div>
-          
+
         </div>
       </div>
     </nav>
