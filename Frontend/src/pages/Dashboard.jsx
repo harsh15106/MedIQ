@@ -4,23 +4,26 @@ import { supabase } from '../utils/SupabaseClient';
 import { FiUser, FiActivity, FiFolder, FiSettings, FiTrendingUp, FiCpu, FiShield } from 'react-icons/fi';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 
-const healthTrendData = [
-  { day: 'Mon', score: 82 },
-  { day: 'Tue', score: 85 },
-  { day: 'Wed', score: 81 },
-  { day: 'Thu', score: 88 },
-  { day: 'Fri', score: 89 },
-  { day: 'Sat', score: 94 },
-  { day: 'Sun', score: 92 },
+const defaultSymptomData = [
+  { subject: 'Fatigue', frequency: 0, fullMark: 100 },
+  { subject: 'Headache', frequency: 0, fullMark: 100 },
+  { subject: 'Nausea', frequency: 0, fullMark: 100 },
+  { subject: 'Fever', frequency: 0, fullMark: 100 },
+  { subject: 'Cough', frequency: 0, fullMark: 100 },
+  { subject: 'Pain', frequency: 0, fullMark: 100 },
 ];
 
-const symptomData = [
-  { subject: 'Fatigue', frequency: 80, fullMark: 100 },
-  { subject: 'Headache', frequency: 60, fullMark: 100 },
-  { subject: 'Nausea', frequency: 40, fullMark: 100 },
-  { subject: 'Fever', frequency: 20, fullMark: 100 },
-  { subject: 'Cough', frequency: 50, fullMark: 100 },
-  { subject: 'Pain', frequency: 70, fullMark: 100 },
+const dailyQuotes = [
+  "Your recent hydration and activity levels indicate stable cardiovascular metrics.",
+  "Consistent sleep patterns are strongly correlated with improved cognitive function today.",
+  "Your resting heart rate trends suggest excellent recovery from recent activities.",
+  "Slight elevations in stress metrics detected; consider a brief mindfulness exercise.",
+  "Optimal vitamin D synthesis timezone approaching based on your location.",
+  "Your physical activity baseline has increased by 12% this month. Keep it up!",
+  "Dietary logs show excellent macronutrient balance over the past 48 hours.",
+  "A balanced circadian rhythm supports a stronger immune response today.",
+  "Daily step count averages are in the optimal range for cardiovascular health.",
+  "Your recovery analytics show you are perfectly primed for intense activity today."
 ];
 
 export default function Dashboard() {
@@ -33,6 +36,11 @@ export default function Dashboard() {
 
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // NEW STATE: For charts & dynamic quote
+  const [healthData, setHealthData] = useState([]);
+  const [userSymptomData, setUserSymptomData] = useState(defaultSymptomData);
+  const [dailyQuote, setDailyQuote] = useState("Analyzing your baseline metrics...");
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -82,6 +90,50 @@ export default function Dashboard() {
             };
           });
           setActivities(formattedActivities);
+          
+          // --- CHART DATA GENERATION based on Health Records ---
+          // NOTE: Because our Health_Records only has file uploads right now in the DB schema, 
+          // we are generating mock chart data based on the *number* of records to make it 'workable' and dynamic based on user activity.
+          let baseScore = recordsData.length > 0 ? 80 : 50; 
+          const generatedTrend = [
+            { day: 'Day 1', score: baseScore + Math.floor(Math.random() * 10) },
+            { day: 'Day 2', score: baseScore + Math.floor(Math.random() * 12) },
+            { day: 'Day 3', score: baseScore + Math.floor(Math.random() * 8) },
+            { day: 'Day 4', score: baseScore + Math.floor(Math.random() * 15) },
+            { day: 'Day 5', score: baseScore + Math.floor(Math.random() * 10) },
+            { day: 'Day 6', score: baseScore + Math.floor(Math.random() * 5) },
+            { day: 'Day 7', score: baseScore + Math.floor(Math.random() * 18) },
+          ];
+          setHealthData(generatedTrend);
+          
+          // Dynamic Symptoms based on record count
+          const generatedSymptoms = [
+            { subject: 'Fatigue', frequency: recordsData.length > 2 ? 70 : 30, fullMark: 100 },
+            { subject: 'Headache', frequency: recordsData.length > 1 ? 50 : 20, fullMark: 100 },
+            { subject: 'Nausea', frequency: recordsData.length > 3 ? 40 : 10, fullMark: 100 },
+            { subject: 'Fever', frequency: recordsData.length > 0 ? 60 : 15, fullMark: 100 },
+            { subject: 'Cough', frequency: recordsData.length > 4 ? 80 : 25, fullMark: 100 },
+            { subject: 'Pain', frequency: recordsData.length > 2 ? 65 : 35, fullMark: 100 },
+          ];
+          setUserSymptomData(generatedSymptoms);
+        } else {
+             // Fallback default
+             setHealthData([{ day: 'Mon', score: 60 }, { day: 'Tue', score: 65 }]);
+        }
+
+        // 3. Fetch Daily Quote
+        // Using Modulo on the current day against the total count of quotes in DB
+        const currentDayOfMonth = new Date().getDate();
+        const { data: quotesData, error: quotesError } = await supabase
+            .from('daily_quotes')
+            .select('quote');
+            
+        if (!quotesError && quotesData && quotesData.length > 0) {
+            const index = currentDayOfMonth % quotesData.length;
+            setDailyQuote(quotesData[index].quote);
+        } else {
+             // Fallback if table doesn't exist yet or is empty
+             setDailyQuote("Your recent hydration and activity levels indicate stable cardiovascular metrics.");
         }
 
         // Artificial delay to show the "AI Model Syncing..." loader
@@ -206,7 +258,7 @@ export default function Dashboard() {
                 </div>
                 <div className="h-56 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={healthTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <AreaChart data={healthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.4}/>
@@ -236,7 +288,7 @@ export default function Dashboard() {
                 </div>
                 <div className="h-60 w-full flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={symptomData}>
+                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={userSymptomData}>
                       <PolarGrid stroke="#e2e8f0" />
                       <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
@@ -280,7 +332,7 @@ export default function Dashboard() {
                   </div>
 
                   <p className="text-2xl lg:text-3xl font-medium opacity-95 max-w-xl leading-snug tracking-tight text-white/90">
-                    "Your recent hydration and activity levels indicate stable cardiovascular metrics."
+                    "{dailyQuote}"
                   </p>
                 </div>
               </div>

@@ -6,6 +6,32 @@ import PolishedBodyMap from '../components/PolishedBodyMap';
 import FloatingDNA from '../components/FloatingDNA';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// --- NEW TYPING EFFECT COMPONENT ---
+// Re-renders string word by word
+const TypeWriterText = ({ text, delay = 0 }) => {
+  const words = text.split(" ");
+  
+  return (
+    <div className="inline">
+      {words.map((word, index) => (
+        <motion.span
+          key={index}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{
+            duration: 0.1,
+            delay: delay + index * 0.05, // Stagger effect
+            ease: "easeIn"
+          }}
+          className="mr-1 inline-block"
+        >
+          {word}
+        </motion.span>
+      ))}
+    </div>
+  );
+};
+
 export default function SymptomCheck() {
   const navigate = useNavigate();
   const chatEndRef = useRef(null);
@@ -34,8 +60,6 @@ export default function SymptomCheck() {
   const [showProcessing, setShowProcessing] = useState(true);
   const [processingText, setProcessingText] = useState("Analyzing 1,284 health signals...");
 
-  // NEW: State to hold the currently selected file/image
-  const [selectedFile, setSelectedFile] = useState(null);
 
   // CHATBOT STATE
   const [confirmedSymptoms, setConfirmedSymptoms] = useState([]);
@@ -152,13 +176,7 @@ export default function SymptomCheck() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isThinking]);
 
-  // 3. HANDLE FILE SELECTION
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-    }
-  };
+
 
   // 3.2 HANDLE 3D BODY MAP SELECTION
   const handleBodyPartSelect = (partName) => {
@@ -218,21 +236,19 @@ export default function SymptomCheck() {
   const handleSend = async (e) => {
     e.preventDefault();
 
-    // Prevent sending if both input and file are empty
-    if (!input.trim() && !selectedFile) return;
+    // Prevent sending if input is empty
+    if (!input.trim()) return;
 
-    // Add user message to chat, including the attachment if it exists
+    // Add user message to chat
     const userMsg = {
       id: Date.now(),
       sender: 'user',
-      text: input,
-      attachment: selectedFile ? { name: selectedFile.name, type: selectedFile.type } : null
+      text: input
     };
 
     setMessages((prev) => [...prev, userMsg]);
     const currentInput = input;
     setInput('');
-    setSelectedFile(null); // Clear the attachment after sending
     setIsThinking(true);
 
     let currentConfirmed = [...confirmedSymptoms];
@@ -398,7 +414,7 @@ export default function SymptomCheck() {
 
       {/* --- CHAT HISTORY AREA --- */}
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-transparent scroll-smooth z-10 relative">
-        <div className="max-w-4xl mx-auto space-y-8 pb-4">
+        <div className="w-full max-w-none px-4 md:px-12 mx-auto space-y-8 pb-4">
           
           <AnimatePresence initial={false}>
             {messages.map((msg) => (
@@ -421,26 +437,17 @@ export default function SymptomCheck() {
                 {/* Message Bubble container */}
                 <div className={`flex flex-col gap-2 max-w-[80%] ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
 
-                  {/* RENDER ATTACHMENT IF IT EXISTS */}
-                  {msg.attachment && (
-                    <div className={`flex items-center gap-3 p-3.5 rounded-2xl shadow-sm border ${msg.sender === 'user'
-                      ? 'bg-blue-600 border-blue-500 text-white opacity-95'
-                      : 'bg-white border-slate-200 text-slate-800'
-                      }`}>
-                      {msg.attachment.type.includes('image') ? <FiImage className="text-2xl opacity-80" /> : <FiFileText className="text-2xl opacity-80" />}
-                      <div className="text-sm font-semibold truncate max-w-[150px] sm:max-w-xs">
-                        {msg.attachment.name}
-                      </div>
-                    </div>
-                  )}
-
                   {/* RENDER TEXT MESSAGE */}
                   {msg.text && (
                     <div className={`px-6 py-4 rounded-[24px] shadow-sm text-[15px] sm:text-[16px] leading-relaxed whitespace-pre-wrap font-medium ${msg.sender === 'user'
                       ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-tr-sm shadow-blue-500/20'
                       : 'bg-white border border-slate-100 text-slate-700 rounded-tl-sm shadow-[0_4px_20px_rgba(0,0,0,0.03)]'
                       }`}>
-                      {msg.text}
+                      {msg.sender === 'ai' ? (
+                        <TypeWriterText text={msg.text} delay={0.2} />
+                      ) : (
+                        msg.text
+                      )}
                     </div>
                   )}
                 </div>
@@ -477,48 +484,9 @@ export default function SymptomCheck() {
       {/* --- INPUT AREA --- */}
       <div className="bg-white/90 backdrop-blur-2xl border-t border-slate-100 p-4 sm:p-6 shrink-0 shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.03)] z-20">
         
-        <div className="max-w-4xl mx-auto">
-          {/* PREVIEW SELECTED FILE BEFORE SENDING */}
-          <AnimatePresence>
-            {selectedFile && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                animate={{ opacity: 1, height: 'auto', marginBottom: 12 }}
-                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                className="px-4 py-3 bg-slate-50 rounded-xl flex items-center justify-between border border-slate-200 shadow-sm overflow-hidden"
-              >
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                      {selectedFile.type.includes('image') ? <FiImage className="text-xl text-blue-600" /> : <FiFileText className="text-xl text-blue-600" />}
-                  </div>
-                  <span className="text-sm font-semibold text-slate-700 truncate">{selectedFile.name}</span>
-                </div>
-                <button
-                  onClick={() => setSelectedFile(null)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
-                  title="Remove attachment"
-                >
-                  <FiX className="text-lg" />
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
+        <div className="w-full max-w-none px-4 md:px-12 mx-auto">
           {/* INPUT FORM */}
           <form onSubmit={handleSend} className="relative flex items-center gap-3">
-
-            {/* Attachment Button */}
-            <label className="cursor-pointer p-4 bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-blue-600 rounded-2xl border border-slate-200 transition-all flex-shrink-0 shadow-sm active:scale-95">
-              <FiPaperclip className="text-[22px]" />
-              {/* Hidden file input */}
-              <input
-                type="file"
-                className="hidden"
-                accept="image/*,.pdf,.doc,.docx"
-                onChange={handleFileSelect}
-                disabled={isThinking}
-              />
-            </label>
 
             {/* 3D Body Map Scanner Button */}
             <button
@@ -562,7 +530,7 @@ export default function SymptomCheck() {
                 
                 <button
                   type="submit"
-                  disabled={(!input.trim() && !selectedFile) || isThinking}
+                  disabled={!input.trim() || isThinking}
                   className="p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 active:scale-95 disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed transition-all cursor-pointer shadow-md shadow-blue-500/30"
                 >
                   <FiSend className="text-xl translate-x-px translate-y-px" />
