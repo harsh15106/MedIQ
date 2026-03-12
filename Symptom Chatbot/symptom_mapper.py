@@ -35,6 +35,74 @@ SYNONYM_MAP = {
     "extremely tired": "fatigue",
 }
 
+# Body Location Keywords → Anatomical Region
+# These are extracted FIRST from user text to set the active region BEFORE symptom scoring.
+BODY_LOCATION_KEYWORDS = {
+    # Head & Brain
+    "Head": [
+        "head", "headache", "skull", "brain", "scalp", "temple", "forehead",
+        "face", "eye", "ear", "nose", "mouth", "jaw", "tooth", "teeth",
+        "vision", "sight", "hearing", "dizzy", "dizziness", "vertigo"
+    ],
+    # Neck
+    "Neck": [
+        "neck", "nape", "cervical", "throat", "larynx", "trachea"
+    ],
+    # Chest
+    "Chest": [
+        "chest", "breast", "rib", "sternum", "lung", "heart", "cardiac",
+        "thorax", "pectoral", "upper back", "shoulder blade"
+    ],
+    # Abdomen
+    "Abdomen": [
+        "stomach", "abdomen", "abdominal", "belly", "gut", "navel", "belly button",
+        "liver", "gallbladder", "pancreas", "intestine", "bowel", "colon",
+        "appendix", "upper right", "upper left", "lower right", "lower left",
+        "epigastric", "umbilical"
+    ],
+    # Pelvis
+    "Pelvis": [
+        "pelvis", "pelvic", "groin", "bladder", "urethra", "uterus", "ovary",
+        "prostate", "rectum", "anus", "anal", "genitals", "genital", "vaginal",
+        "vulva", "perineum", "crotch"
+    ],
+    # Back
+    "Back": [
+        "back", "spine", "spinal", "lumbar", "sacral", "tailbone", "coccyx",
+        "vertebra", "disc", "lower back", "mid back", "upper back"
+    ],
+    # Arm/Hand
+    "Arm/Hand": [
+        "arm", "forearm", "elbow", "wrist", "hand", "finger", "thumb",
+        "palm", "knuckle", "wrist", "bicep", "tricep", "shoulder",
+        "upper arm", "lower arm"
+    ],
+    # Leg/Foot
+    "Leg/Foot": [
+        "leg", "thigh", "calf", "shin", "knee", "ankle", "foot", "feet",
+        "toe", "heel", "hamstring", "quadricep", "groin", "hip",
+        "lower leg", "upper leg", "fibula", "tibia", "femur"
+    ],
+}
+
+def extract_body_region_from_text(user_input):
+    """
+    Parse user free-text for body location keywords.
+    Returns a set of matched anatomical regions (e.g. {'Leg/Foot'}).
+    This runs BEFORE symptom extraction and acts as the primary region filter.
+    """
+    text = user_input.lower()
+    matched_regions = set()
+    
+    for region, keywords in BODY_LOCATION_KEYWORDS.items():
+        for kw in keywords:
+            # Use word boundary matching for precision
+            if re.search(r'\b' + re.escape(kw) + r'\b', text):
+                matched_regions.add(region)
+                break # one match per region is enough
+    
+    return matched_regions
+
 # Clean Input
 def clean_text(text):
     text = text.lower()
@@ -210,13 +278,6 @@ SYMPTOM_PATTERNS = {
         r"acid reflux"
     ],
 
-    # Migraine
-    "headache": [
-        r"headache",
-        r"throbbing head",
-        r"pain.*one side.*head"
-    ],
-
     "nausea": [
         r"nausea",
         r"feel like vomiting",
@@ -229,6 +290,55 @@ SYMPTOM_PATTERNS = {
         r"itchy rash",
         r"small rash",
         r"red rash"
+    ],
+
+    # Body Mapping (3D Interactive Model Extractor)
+    "headache": [
+        r"headache",
+        r"throbbing head",
+        r"pain.*head"
+    ],
+    
+    "neck_pain": [
+        r"pain.*neck",
+        r"neck.*pain"
+    ],
+    
+    "stomach_pain": [
+        r"pain.*stomach",
+        r"stomach.*pain"
+    ],
+
+    "abdominal_pain": [
+        r"pain.*pelvis",
+        r"pelvis.*pain",
+        r"pain.*abdomen"
+    ],
+
+    "joint_pain": [
+        r"pain.*shoulder",
+        r"shoulder.*pain",
+        r"pain.*hand",
+        r"hand.*pain",
+        r"pain.*foot",
+        r"foot.*pain",
+        r"pain.*joint"
+    ],
+
+    "muscle_pain": [
+        r"pain.*arm",
+        r"arm.*pain",
+        r"pain.*thigh",
+        r"thigh.*pain",
+        r"pain.*calf",
+        r"calf.*pain",
+        r"pain.*muscle",
+        r"muscle.*pain"
+    ],
+
+    "knee_pain": [
+        r"pain.*knee",
+        r"knee.*pain"
     ],
 }
 

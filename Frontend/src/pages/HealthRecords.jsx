@@ -168,29 +168,29 @@ export default function HealthRecords() {
           const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
           let modelResponse;
 
-          if (newFile) {
-            // IF FILE EXISTS: Use the "From Report" endpoint
-            const formData = new FormData();
-            formData.append('file', newFile);
-
-            modelResponse = await fetch(`${apiUrl}/api/analyze-report`, { // You'll need this route in Express
-              method: 'POST',
-              body: formData,
-              // Don't set Content-Type header, the browser will set it for FormData
-            });
-          } else {
-            // IF NO FILE: Send manual metrics as JSON
-            const payload = {
-              Blood_glucose: parseFloat(healthMetrics.bloodGlucose) || 0,
-              HbA1C: parseFloat(healthMetrics.hbA1c) || 0,
-              Systolic_BP: parseFloat(healthMetrics.systolicBP) || 0,
-              Diastolic_BP: parseFloat(healthMetrics.diastolicBP) || 0,
-              LDL: parseFloat(healthMetrics.ldl) || 0,
-              HDL: parseFloat(healthMetrics.hdl) || 0,
-              Triglycerides: parseFloat(healthMetrics.triglycerides) || 0,
-              Haemoglobin: parseFloat(healthMetrics.haemoglobin) || 0,
-              MCV: parseFloat(healthMetrics.mcv) || 0
-            };
+    if (newFile) {
+      // IF FILE EXISTS: Use the "From Report" endpoint
+      const formData = new FormData();
+      formData.append('file', newFile);
+      
+      modelResponse = await fetch(`${apiUrl}/api/analyze-report`, { // You'll need this route in Express
+        method: 'POST',
+        body: formData,
+        // Don't set Content-Type header, the browser will set it for FormData
+      });
+    } else {
+      // IF NO FILE: Send manual metrics as JSON
+      const payload = {
+        Blood_glucose: parseFloat(healthMetrics.bloodGlucose) || 0,
+        HbA1C: parseFloat(healthMetrics.hbA1c) || 0,
+        Systolic_BP: parseFloat(healthMetrics.systolicBP) || 0,
+        Diastolic_BP: parseFloat(healthMetrics.diastolicBP) || 0,
+        LDL: parseFloat(healthMetrics.ldl) || 0,
+        HDL: parseFloat(healthMetrics.hdl) || 0,
+        Triglycerides: parseFloat(healthMetrics.triglycerides) || 0,
+        Haemoglobin: parseFloat(healthMetrics.haemoglobin) || 0,
+        MCV: parseFloat(healthMetrics.mcv) || 0
+      };
 
             modelResponse = await fetch(`${apiUrl}/api/analyze-health`, {
               method: 'POST',
@@ -206,11 +206,11 @@ export default function HealthRecords() {
               return;
             }
 
-            const result = await modelResponse.json();
-            if (result.success) {
-              setModelInsights(result.analysis);
-            }
-          }
+const result = await modelResponse.json();
+if (result.success) {
+    setModelInsights(result.analysis);
+}
+    }
 
           const result = await modelResponse.json();
           if (result.success) {
@@ -463,7 +463,11 @@ export default function HealthRecords() {
                   <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
                     <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Predicted Condition</p>
                     <p className="text-lg font-bold text-emerald-800 dark:text-emerald-200">
-                      {modelInsights.predicted_condition || modelInsights.prediction || 'Unknown'}
+                     {typeof modelInsights?.predicted_condition === "string"
+  ? modelInsights.predicted_condition
+  : typeof modelInsights?.prediction === "string"
+  ? modelInsights.prediction
+  : "Unknown"}
                     </p>
                   </div>
 

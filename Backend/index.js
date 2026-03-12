@@ -2,9 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
-import axios from 'axios';  
+import axios from 'axios';
 import multer from 'multer';
-
+import FormData from 'form-data';
 dotenv.config();
 
 const app = express();
@@ -34,7 +34,7 @@ app.post('/api/analyze-health', upload.single('file'), async (req, res) => {
 
         if (req.file) {
             // SCENARIO A: File Upload (PDF/Image)
-            const FormData = require('form-data');
+
             const form = new FormData();
             form.append('file', req.file.buffer, {
                 filename: req.file.originalname,
@@ -49,20 +49,53 @@ app.post('/api/analyze-health', upload.single('file'), async (req, res) => {
             // Ensure req.body is not empty. If React sends JSON, 
             // ensure your frontend headers match or use a fallback.
             console.log("Processing manual metrics:", req.body);
-            
+
             response = await axios.post(`${ML_SERVICE_URL}/predict`, req.body);
         }
 
-        res.json({ 
-            success: true, 
-            analysis: response.data 
+        res.json({
+            success: true,
+            analysis: response.data
         });
 
     } catch (error) {
         console.error("ML Service Error:", error.message);
-        res.status(500).json({ 
-            success: false, 
-            error: "The AI Model service is currently unreachable." 
+        res.status(500).json({
+            success: false,
+            error: "The AI Model service is currently unreachable."
+        });
+    }
+});
+
+
+app.post('/api/analyze-report', upload.single('file'), async (req, res) => {
+    try {
+
+
+        // const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://127.0.0.1:8000';
+
+        const form = new FormData();
+        form.append('file', req.file.buffer, {
+            filename: req.file.originalname,
+            contentType: req.file.mimetype,
+        });
+
+        const response = await axios.post(
+            `${ML_SERVICE_URL}/predict-from-report`,
+            form,
+            { headers: form.getHeaders() }
+        );
+
+        res.json({
+            success: true,
+            analysis: response.data
+        });
+
+    } catch (error) {
+        console.error("Report Analysis Error:", error.message);
+        res.status(500).json({
+            success: false,
+            error: "AI model failed to process report."
         });
     }
 });
@@ -111,72 +144,44 @@ app.post('/api/analyze-health', upload.single('file'), async (req, res) => {
     }
 });}*/
 
+// --- DAILY QUOTE AI ENDPOINT ---
+app.get('/api/daily-quote', async (req, res) => {
+    try {
+        // Fetch all quotes from the Supabase database
+        const { data: quotesData, error: quotesError } = await supabase
+            .from('daily_quotes')
+            .select('quote');
+
+        if (quotesError) throw quotesError;
+
+        if (!quotesData || quotesData.length === 0) {
+            // Fallback if the table is empty or doesn't exist yet
+            return res.json({
+                success: true,
+                quote: "Your recent hydration and activity levels indicate stable cardiovascular metrics."
+            });
+        }
+
+        // Use the current day of the month to select a quote that changes everyday
+        const currentDayOfMonth = new Date().getDate();
+        const index = currentDayOfMonth % quotesData.length;
+
+        return res.json({
+            success: true,
+            quote: quotesData[index].quote
+        });
+
+    } catch (error) {
+        console.error("Daily Quote Error:", error.message);
+        return res.status(500).json({
+            success: false,
+            error: "Failed to fetch daily quote"
+        });
+    }
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Node server running on http://localhost:${PORT}`);
 });
-/*{app.post('/api/analyze-health', async (req, res) => {
-    try {
-        const {
-            blood_glucose,
-            hba1c,
-            systolic_bp,
-            diastolic_bp,
-            ldl,
-            hdl,
-            triglycerides,
-            haemoglobin,
-            mcv
-        } = req.body;
-
-        // TODO: Connect to actual Health Model here
-        // Example: const response = await axios.post('http://python-model-service/predict', req.body);
-        // const prediction = response.data;
-
-        // --- SIMULATED AI MODEL LOGIC ---
-        let riskLevel = "Low";
-        let insights = [];
-
-        // Basic heuristic checks to simulate model output
-        if (blood_glucose > 125 || hba1c > 6.4) {
-            riskLevel = "High";
-            insights.push("Blood glucose/HbA1c levels suggest potential diabetes risk. Consult a physician for a formal diagnosis.");
-        } else if (blood_glucose >= 100 || hba1c >= 5.7) {
-            if (riskLevel === "Low") riskLevel = "Moderate";
-            insights.push("Blood glucose/HbA1c levels suggest prediabetes. Consider dietary adjustments.");
-        }
-
-        if (systolic_bp >= 140 || diastolic_bp >= 90) {
-            riskLevel = "High";
-            insights.push("Blood pressure is currently in the hypertensive range. Please monitor closely.");
-        }
-
-        if (ldl > 160) {
-            if (riskLevel === "Low") riskLevel = "Moderate";
-            insights.push("LDL cholesterol is elevated, which can increase cardiovascular risk.");
-        }
-
-        if (insights.length === 0) {
-            insights.push("All provided metrics appear to be within normal ranges. Keep up the good work!");
-        }
-
-        // Return the "Model" Prediction to the Frontend
-        return res.status(200).json({
-            success: true,
-            analysis: {
-                riskLevel,
-                insights,
-                timestamp: new Date().toISOString()
-            },
-            message: "Health metrics successfully analyzed by MedIQ Model."
-        });
-
-    } catch (error) {
-        console.error("Model Error:", error);
-        return res.status(500).json({ success: false, error: "Failed to run health model analysis" });
-    }
-});}*/
-
-// In your Express index.js
-//require('dotenv').config();
 
