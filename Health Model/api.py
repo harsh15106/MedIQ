@@ -30,7 +30,7 @@ def predict(data: PatientData):
     return result
 
 # ---------- Report upload ----------
-@app.post("/predict-from-report")
+"""@app.post("/predict-from-report")
 async def predict_from_report(file: UploadFile = File(...)):
     # 1. Validate file type
     if file.content_type not in ["application/pdf", "image/jpeg", "image/png"]:
@@ -39,11 +39,34 @@ async def predict_from_report(file: UploadFile = File(...)):
     try:
         # 2. Extract values
         # Make sure your extract function can handle the UploadFile object
-        values = extract_values_from_report(file) 
+        values = await extract_values_from_report(file)
         
         # 3. Predict
         result = predict_health_status(values)
         return {"extracted_values": values, "prediction": result}
+
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing report: {str(e)}")
+        """
+@app.post("/predict-from-report")
+async def predict_from_report(file: UploadFile = File(...)):
+    try:
+        values = await extract_values_from_report(file)
+
+        print("EXTRACTED VALUES:", values)
+
+        result = predict_health_status(values)
+
+        print("MODEL RESULT:", result)
+
+        return {
+            "extracted_values": values,
+            "prediction": result
+        }
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()   # 🔥 THIS IS CRITICAL
+        print("FULL ERROR:", e)
+        raise

@@ -2,6 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/SupabaseClient';
 import { FiUser, FiActivity, FiFolder, FiSettings, FiTrendingUp, FiCpu, FiShield } from 'react-icons/fi';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
+
+const healthTrendData = [
+  { day: 'Mon', score: 82 },
+  { day: 'Tue', score: 85 },
+  { day: 'Wed', score: 81 },
+  { day: 'Thu', score: 88 },
+  { day: 'Fri', score: 89 },
+  { day: 'Sat', score: 94 },
+  { day: 'Sun', score: 92 },
+];
+
+const symptomData = [
+  { subject: 'Fatigue', frequency: 80, fullMark: 100 },
+  { subject: 'Headache', frequency: 60, fullMark: 100 },
+  { subject: 'Nausea', frequency: 40, fullMark: 100 },
+  { subject: 'Fever', frequency: 20, fullMark: 100 },
+  { subject: 'Cough', frequency: 50, fullMark: 100 },
+  { subject: 'Pain', frequency: 70, fullMark: 100 },
+];
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -160,6 +180,74 @@ export default function Dashboard() {
               <StatWidget title="AI Risk Score" value="12%" subtitle="Low Risk Today" icon={<FiShield size={24} />} />
               <StatWidget title="Health Signals Processed" value="1,284" subtitle="Data Points" icon={<FiActivity size={24} />} />
               <StatWidget title="Model Confidence" value="89%" subtitle="Accuracy Confidence" icon={<FiCpu size={24} />} />
+            </>
+          )}
+        </div>
+
+        {/* DYNAMIC CHARTS SECTION */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 md:mb-12">
+          {loading ? (
+            <>
+              <div className="h-72 bg-white/50 backdrop-blur-md rounded-3xl border border-white animate-shimmer"></div>
+              <div className="h-72 bg-white/50 backdrop-blur-md rounded-3xl border border-white animate-shimmer"></div>
+            </>
+          ) : (
+            <>
+              {/* Chart 1: Health Trend */}
+              <div className="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-sm border border-white hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 tracking-tight">AI Health Trend</h3>
+                    <p className="text-sm text-theme-text-muted">7-Day Predictive Analysis</p>
+                  </div>
+                  <div className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold tracking-wide">
+                    +12% vs last week
+                  </div>
+                </div>
+                <div className="h-56 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={healthTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.4}/>
+                          <stop offset="95%" stopColor="#38bdf8" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
+                      <RechartsTooltip 
+                        contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                        itemStyle={{ color: '#0ea5e9', fontWeight: 'bold' }}
+                      />
+                      <Area type="monotone" dataKey="score" stroke="#0ea5e9" strokeWidth={3} fillOpacity={1} fill="url(#colorScore)" activeDot={{ r: 6, strokeWidth: 0, fill: '#0ea5e9' }} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Chart 2: Symptom Radar */}
+              <div className="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-sm border border-white hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 tracking-tight">Symptom Distribution</h3>
+                    <p className="text-sm text-theme-text-muted">AI Categorization (30 Days)</p>
+                  </div>
+                </div>
+                <div className="h-60 w-full flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={symptomData}>
+                      <PolarGrid stroke="#e2e8f0" />
+                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} />
+                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                      <Radar name="Frequency" dataKey="frequency" stroke="#6366f1" strokeWidth={2} fill="#818cf8" fillOpacity={0.5} />
+                      <RechartsTooltip 
+                        contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             </>
           )}
         </div>

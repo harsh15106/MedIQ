@@ -173,7 +173,7 @@ if (newFile || healthMetrics.bloodGlucose || healthMetrics.systolicBP) {
       const formData = new FormData();
       formData.append('file', newFile);
       
-      modelResponse = await fetch(`${apiUrl}/api/analyze-report`, { // You'll need this route in Express
+      modelResponse = await fetch(`${apiUrl}/api/analyze-report`,  { // You'll need this route in Express
         method: 'POST',
         body: formData,
         // Don't set Content-Type header, the browser will set it for FormData
@@ -206,10 +206,6 @@ if (!modelResponse.ok) {
     return;
 }
 
-const result = await modelResponse.json();
-if (result.success) {
-    setModelInsights(result.analysis);
-}
     }
 
     const result = await modelResponse.json();
@@ -463,7 +459,11 @@ if (result.success) {
                   <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
                     <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Predicted Condition</p>
                     <p className="text-lg font-bold text-emerald-800 dark:text-emerald-200">
-                      {modelInsights.predicted_condition || modelInsights.prediction || 'Unknown'}
+                     {typeof modelInsights?.predicted_condition === "string"
+  ? modelInsights.predicted_condition
+  : typeof modelInsights?.prediction === "string"
+  ? modelInsights.prediction
+  : "Unknown"}
                     </p>
                   </div>
 

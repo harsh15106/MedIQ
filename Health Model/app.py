@@ -46,8 +46,21 @@ def calculate_risk_percentage(row):
 # Prediction function
 def predict_health_status(input_data):
 
-    sample_df = pd.DataFrame([input_data])
-    sample_scaled = scaler.transform(sample_df)
+    feature_order = [
+    "Blood_glucose",
+    "HbA1C",
+    "Systolic_BP",
+    "Diastolic_BP",
+    "LDL",
+    "HDL",
+    "Triglycerides",
+    "Haemoglobin",
+    "MCV"
+]
+
+    df = pd.DataFrame([input_data])[feature_order]
+    df = df.fillna(0)
+    sample_scaled = scaler.transform(df)
 
     probs = model.predict_proba(sample_scaled)[0]
     predicted_class = probs.argmax()
