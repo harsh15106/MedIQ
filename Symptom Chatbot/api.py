@@ -1,13 +1,23 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from typing import Optional
 import joblib as jb
 import numpy as np
 from all_symptoms import common_symptoms, disease_symptom_prob
 from bayesian_engine import bayesian_update
 from symptom_mapper import extract_symptoms_from_text
 from clinical_response_engine import generate_clinical_response
+from drug_interactions import check_interactions
+from drug_database import DRUG_DATABASE
 
 from fastapi.middleware.cors import CORSMiddleware
+
+# Deep Translator for multi-language support
+try:
+    from deep_translator import GoogleTranslator
+    TRANSLATOR_AVAILABLE = True
+except ImportError:
+    TRANSLATOR_AVAILABLE = False
 
 # FastAPI app
 app = FastAPI()
@@ -28,6 +38,49 @@ labels = jb.load("label_encoder.pkl")
 from question_selector import select_best_question
 import re
 
+
+# ==================== DRUG INTERACTION API ====================
+
+class InteractionRequest(BaseModel):
+    drugs: list[str]
+
+@app.get("/drugs")
+def get_drugs():
+    """Return the list of all drugs in the database for the frontend selector."""
+    return [{"name": d["name"], "class": d["class"], "group": d["group"]} for d in DRUG_DATABASE]
+
+@app.post("/check-interactions")
+def check_drug_interactions(data: InteractionRequest):
+    """Check for interactions between a list of drugs."""
+    results = check_interactions(data.drugs)
+    return {
+        "drug_count": len(data.drugs),
+        "interactions_found": len(results),
+        "interactions": results
+    }
+
+
+# ==================== TRANSLATION API ====================
+
+class TranslateRequest(BaseModel):
+    text: str
+    source_lang: str = "auto"
+
+@app.post("/translate")
+def translate_text(data: TranslateRequest):
+    """Translate text to English using Google Translate."""
+    if not TRANSLATOR_AVAILABLE:
+        return {"translated_text": data.text, "detected_lang": "en", "error": "Translator not available"}
+    try:
+        translator = GoogleTranslator(source=data.source_lang, target="en")
+        translated = translator.translate(data.text)
+        return {"translated_text": translated, "source_lang": data.source_lang}
+    except Exception as e:
+        return {"translated_text": data.text, "detected_lang": "en", "error": str(e)}
+
+
+# ==================== CHATBOT API ====================
+
 class PatientProfile(BaseModel):
     age: int
     gender: str
@@ -41,6 +94,7 @@ class ChatRequest(BaseModel):
     new_text: str
     confirmed_symptoms: list[str]
     denied_symptoms: list[str]
+    language: Optional[str] = "en"
 
 @app.post("/chat")
 def chat(data: ChatRequest):
@@ -48,6 +102,14 @@ def chat(data: ChatRequest):
     new_text = data.new_text
     confirmed = set(data.confirmed_symptoms)
     denied = set(data.denied_symptoms)
+
+    # Auto-translate if language is not English
+    if data.language and data.language != "en" and TRANSLATOR_AVAILABLE:
+        try:
+            translator = GoogleTranslator(source=data.language, target="en")
+            new_text = translator.translate(new_text)
+        except Exception:
+            pass  # Fall back to original text
 
     # BMI calculation
     height_m = profile.height_cm / 100

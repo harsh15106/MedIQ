@@ -8,6 +8,7 @@ import HealthRecords from './pages/HealthRecords';
 import SymptomCheck from './pages/SymptomCheck';
 import { Toaster } from 'react-hot-toast';
 import ProfileSettings from './pages/ProfileSettings';
+import DrugInteractionChecker from './pages/DrugInteractionChecker';
 
 
 console.log("SUPABASE URL:", import.meta.env.VITE_SUPABASE_URL)
@@ -48,6 +49,7 @@ function App() {
           <Route path="/records" element={<HealthRecords />} />
           <Route path="/symptom-check" element={<SymptomCheck />} />
           <Route path="/settings" element={<ProfileSettings />} />
+          <Route path="/drug-interactions" element={<DrugInteractionChecker />} />
 
           <Route path="*" element={
             <div className="flex flex-col items-center justify-center min-h-screen ">

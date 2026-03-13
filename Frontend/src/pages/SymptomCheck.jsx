@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiSend, FiUser, FiCpu, FiPaperclip, FiX, FiImage, FiFileText, FiMic, FiMicOff, FiVolume2, FiVolumeX, FiMaximize } from 'react-icons/fi';
+import { FiArrowLeft, FiSend, FiUser, FiCpu, FiPaperclip, FiX, FiImage, FiFileText, FiMic, FiMicOff, FiVolume2, FiVolumeX, FiMaximize, FiDownload } from 'react-icons/fi';
 import { supabase } from '../utils/SupabaseClient';
 import PolishedBodyMap from '../components/PolishedBodyMap';
 import FloatingDNA from '../components/FloatingDNA';
 import { motion, AnimatePresence } from 'framer-motion';
+import { generateChatbotReport } from '../utils/generateReport';
+import LanguageSelector from '../components/LanguageSelector';
 
 // --- NEW TYPING EFFECT COMPONENT ---
 // Re-renders string word by word
@@ -56,6 +58,9 @@ export default function SymptomCheck() {
   // NEW: 3D Body Map State
   const [showBodyMap, setShowBodyMap] = useState(false);
 
+  // Language State
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+
   // NEW: AI Processing Screen State
   const [showProcessing, setShowProcessing] = useState(true);
   const [processingText, setProcessingText] = useState("Analyzing 1,284 health signals...");
@@ -65,6 +70,7 @@ export default function SymptomCheck() {
   const [confirmedSymptoms, setConfirmedSymptoms] = useState([]);
   const [deniedSymptoms, setDeniedSymptoms] = useState([]);
   const [currentQuestionSymptomId, setCurrentQuestionSymptomId] = useState(null);
+  const [lastReportData, setLastReportData] = useState(null);
 
   // NEW: Patient Profile State
   const [patientProfile, setPatientProfile] = useState({
@@ -243,7 +249,8 @@ export default function SymptomCheck() {
     const userMsg = {
       id: Date.now(),
       sender: 'user',
-      text: input
+      text: input,
+      language: selectedLanguage
     };
 
     setMessages((prev) => [...prev, userMsg]);
@@ -284,7 +291,8 @@ export default function SymptomCheck() {
           patient_profile: patientProfile,
           new_text: currentInput,
           confirmed_symptoms: currentConfirmed,
-          denied_symptoms: currentDenied
+          denied_symptoms: currentDenied,
+          language: selectedLanguage
         })
       });
 
@@ -305,6 +313,14 @@ export default function SymptomCheck() {
         aiResponseText = data.question_text;
       } else if (data.type === "report") {
         aiResponseText = data.report || `Based on my analysis, you might have ${data.top_disease}.`;
+
+        // Store report data for PDF export
+        setLastReportData({
+          disease: data.top_disease,
+          report: aiResponseText,
+          confirmedSymptoms: data.confirmed_symptoms || [],
+          predictions: data.predictions || []
+        });
 
         // Reset the diagnosis state so the next message starts fresh!
         setConfirmedSymptoms([]);
@@ -450,6 +466,20 @@ export default function SymptomCheck() {
                       )}
                     </div>
                   )}
+
+                  {/* PDF Download Button — appears after a report-type AI message */}
+                  {msg.sender === 'ai' && lastReportData && msg.text && msg.text.includes('CLINICAL REPORT') && (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.5 }}
+                      onClick={() => generateChatbotReport(lastReportData)}
+                      className="flex items-center gap-2 px-4 py-2 mt-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/20 hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer"
+                    >
+                      <FiDownload className="text-base" />
+                      Download AI Report
+                    </motion.button>
+                  )}
                 </div>
 
               </motion.div>
@@ -487,6 +517,12 @@ export default function SymptomCheck() {
         <div className="w-full max-w-none px-4 md:px-12 mx-auto">
           {/* INPUT FORM */}
           <form onSubmit={handleSend} className="relative flex items-center gap-3">
+
+            {/* Language Selector */}
+            <LanguageSelector
+              selectedLanguage={selectedLanguage}
+              onLanguageChange={setSelectedLanguage}
+            />
 
             {/* 3D Body Map Scanner Button */}
             <button

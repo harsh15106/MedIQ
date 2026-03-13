@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/SupabaseClient';
-import { FiUser, FiActivity, FiFolder, FiSettings, FiTrendingUp, FiCpu, FiShield } from 'react-icons/fi';
+import { FiUser, FiActivity, FiFolder, FiSettings, FiTrendingUp, FiCpu, FiShield, FiHeart } from 'react-icons/fi';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 
 const defaultSymptomData = [
@@ -36,7 +36,7 @@ export default function Dashboard() {
 
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // NEW STATE: For charts & dynamic quote
   const [healthData, setHealthData] = useState([]);
   const [userSymptomData, setUserSymptomData] = useState(defaultSymptomData);
@@ -90,11 +90,11 @@ export default function Dashboard() {
             };
           });
           setActivities(formattedActivities);
-          
+
           // --- CHART DATA GENERATION based on Health Records ---
           // NOTE: Because our Health_Records only has file uploads right now in the DB schema, 
           // we are generating mock chart data based on the *number* of records to make it 'workable' and dynamic based on user activity.
-          let baseScore = recordsData.length > 0 ? 80 : 50; 
+          let baseScore = recordsData.length > 0 ? 80 : 50;
           const generatedTrend = [
             { day: 'Day 1', score: baseScore + Math.floor(Math.random() * 10) },
             { day: 'Day 2', score: baseScore + Math.floor(Math.random() * 12) },
@@ -105,7 +105,7 @@ export default function Dashboard() {
             { day: 'Day 7', score: baseScore + Math.floor(Math.random() * 18) },
           ];
           setHealthData(generatedTrend);
-          
+
           // Dynamic Symptoms based on record count
           const generatedSymptoms = [
             { subject: 'Fatigue', frequency: recordsData.length > 2 ? 70 : 30, fullMark: 100 },
@@ -117,23 +117,23 @@ export default function Dashboard() {
           ];
           setUserSymptomData(generatedSymptoms);
         } else {
-             // Fallback default
-             setHealthData([{ day: 'Mon', score: 60 }, { day: 'Tue', score: 65 }]);
+          // Fallback default
+          setHealthData([{ day: 'Mon', score: 60 }, { day: 'Tue', score: 65 }]);
         }
 
         // 3. Fetch Daily Quote
         // Using Modulo on the current day against the total count of quotes in DB
         const currentDayOfMonth = new Date().getDate();
         const { data: quotesData, error: quotesError } = await supabase
-            .from('daily_quotes')
-            .select('quote');
-            
+          .from('daily_quotes')
+          .select('quote');
+
         if (!quotesError && quotesData && quotesData.length > 0) {
-            const index = currentDayOfMonth % quotesData.length;
-            setDailyQuote(quotesData[index].quote);
+          const index = currentDayOfMonth % quotesData.length;
+          setDailyQuote(quotesData[index].quote);
         } else {
-             // Fallback if table doesn't exist yet or is empty
-             setDailyQuote("Your recent hydration and activity levels indicate stable cardiovascular metrics.");
+          // Fallback if table doesn't exist yet or is empty
+          setDailyQuote("Your recent hydration and activity levels indicate stable cardiovascular metrics.");
         }
 
         // Artificial delay to show the "AI Model Syncing..." loader
@@ -261,14 +261,14 @@ export default function Dashboard() {
                     <AreaChart data={healthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.4}/>
-                          <stop offset="95%" stopColor="#38bdf8" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="#38bdf8" stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
                       <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-                      <RechartsTooltip 
+                      <RechartsTooltip
                         contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
                         itemStyle={{ color: '#0ea5e9', fontWeight: 'bold' }}
                       />
@@ -293,7 +293,7 @@ export default function Dashboard() {
                       <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                       <Radar name="Frequency" dataKey="frequency" stroke="#6366f1" strokeWidth={2} fill="#818cf8" fillOpacity={0.5} />
-                      <RechartsTooltip 
+                      <RechartsTooltip
                         contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
                       />
                     </RadarChart>
@@ -409,6 +409,13 @@ export default function Dashboard() {
                   desc="Manage your data and platform settings."
                   icon={<FiSettings size={24} />}
                   onClick={() => navigate('/settings')}
+                />
+
+                <QuickActionCard
+                  title="Drug Interaction Checker"
+                  desc="Check your medications for dangerous interactions."
+                  icon={<FiHeart size={24} />}
+                  onClick={() => navigate('/drug-interactions')}
                 />
               </>
             )}

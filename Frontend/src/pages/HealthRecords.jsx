@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiUploadCloud, FiFileText, FiTrash2, FiClock } from 'react-icons/fi';
+import { FiArrowLeft, FiUploadCloud, FiFileText, FiTrash2, FiClock, FiDownload } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { generateHealthAnalysisReport } from '../utils/generateReport';
 
 import { supabase } from '../utils/SupabaseClient';
 
@@ -514,12 +515,20 @@ if (!modelResponse.ok) {
                   )}
                 </div>
 
-                <button
-                  onClick={() => setModelInsights(null)}
-                  className="mt-6 w-full py-2 text-sm font-semibold text-slate-500 hover:text-slate-700 underline"
-                >
-                  Clear Results
-                </button>
+                <div className="mt-6 flex gap-3">
+                  <button
+                    onClick={() => generateHealthAnalysisReport({ analysis: modelInsights, metrics: healthMetrics })}
+                    className="flex-1 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <FiDownload /> Download PDF
+                  </button>
+                  <button
+                    onClick={() => setModelInsights(null)}
+                    className="flex-1 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all cursor-pointer"
+                  >
+                    Clear Results
+                  </button>
+                </div>
               </div>
             )}</div>
 
