@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import MedicalProfile from './pages/MedicalProfile';
 import HealthRecords from './pages/HealthRecords';
 import SymptomCheck from './pages/SymptomCheck';
+import DrugConflict from './pages/DrugConflict';
 import { Toaster } from 'react-hot-toast';
 import ProfileSettings from './pages/ProfileSettings';
 
@@ -47,6 +48,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/records" element={<HealthRecords />} />
           <Route path="/symptom-check" element={<SymptomCheck />} />
+          <Route path="/drug-conflict" element={<DrugConflict />} />
           <Route path="/settings" element={<ProfileSettings />} />
 
           <Route path="*" element={

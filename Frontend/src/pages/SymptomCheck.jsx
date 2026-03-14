@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiSend, FiUser, FiCpu, FiPaperclip, FiX, FiImage, FiFileText, FiMic, FiMicOff, FiVolume2, FiVolumeX, FiMaximize } from 'react-icons/fi';
+import { FiArrowLeft, FiSend, FiUser, FiCpu, FiPaperclip, FiX, FiImage, FiFileText, FiMic, FiMicOff, FiVolume2, FiVolumeX, FiMaximize, FiDownload } from 'react-icons/fi';
 import { supabase } from '../utils/SupabaseClient';
 import PolishedBodyMap from '../components/PolishedBodyMap';
 import FloatingDNA from '../components/FloatingDNA';
 import { motion, AnimatePresence } from 'framer-motion';
+import { jsPDF } from 'jspdf';
 
 // --- COMPATIBLE TYPING EFFECT COMPONENT ---
 const TypeWriterText = ({ text }) => {
@@ -234,6 +235,49 @@ export default function SymptomCheck() {
     }
   }, []);
 
+  // PDF Download for Chat Conversation
+  const downloadChatPDF = () => {
+    if (messages.length <= 1) return; // Don't download if only the welcome message exists
+    const doc = new jsPDF();
+    doc.setFontSize(22);
+    doc.setTextColor(37, 99, 235);
+    doc.text('MedIQ Symptom Chat Report', 14, 20);
+    doc.setFontSize(10);
+    doc.setTextColor(120);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
+    doc.setDrawColor(200);
+    doc.line(14, 32, 196, 32);
+
+    let y = 40;
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    messages.forEach((msg) => {
+      const sender = msg.sender === 'user' ? 'You' : 'MedIQ AI';
+      const label = `${sender}:`;
+      const lines = doc.splitTextToSize(msg.text, 170);
+
+      // Check page overflow
+      if (y + (lines.length * 6) + 12 > pageHeight - 20) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.setFontSize(11);
+      doc.setTextColor(msg.sender === 'user' ? 37 : 16, msg.sender === 'user' ? 99 : 185, msg.sender === 'user' ? 235 : 129);
+      doc.setFont(undefined, 'bold');
+      doc.text(label, 14, y);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(60);
+      doc.text(lines, 14, y + 6);
+      y += (lines.length * 6) + 14;
+    });
+
+    doc.setFontSize(9);
+    doc.setTextColor(150);
+    doc.text('Disclaimer: This report is AI-generated and not a substitute for professional medical advice.', 14, pageHeight - 10);
+    doc.save('MedIQ_Symptom_Chat_Report.pdf');
+  };
+
   // 4. HANDLE SENDING A MESSAGE
   const handleSend = async (e) => {
     e.preventDefault();
@@ -457,6 +501,17 @@ export default function SymptomCheck() {
           </div>
         </div>
 
+        <div className="flex items-center gap-2">
+        {/* Download Chat PDF */}
+        <button
+          onClick={downloadChatPDF}
+          disabled={messages.length <= 1}
+          className="p-2.5 rounded-full transition-all shadow-sm active:scale-95 text-slate-400 bg-slate-50 border border-slate-100 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 disabled:opacity-40 disabled:cursor-not-allowed"
+          title="Download Chat as PDF"
+        >
+          <FiDownload className="text-xl" />
+        </button>
+
         {/* Voice Toggle */}
         <button
           onClick={toggleVoice}
@@ -465,6 +520,7 @@ export default function SymptomCheck() {
         >
           {voiceEnabled ? <FiVolume2 className="text-xl" /> : <FiVolumeX className="text-xl" />}
         </button>
+        </div>
       </nav>
 
       {/* --- 3D BODY MAP MODAL --- */}

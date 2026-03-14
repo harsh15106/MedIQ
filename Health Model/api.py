@@ -1,11 +1,21 @@
 from unittest import result
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from service import predict_health_status
 from report_reader import extract_values_from_report
+from drug_db import check_conflicts
 
 app = FastAPI(title="Health AI API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class PatientData(BaseModel):
     Blood_glucose: float
@@ -18,6 +28,9 @@ class PatientData(BaseModel):
     Haemoglobin: float
     MCV: float
 
+class DrugList(BaseModel):
+    drugs: list[str]
+
 @app.get("/")
 def root():
     return {"status": "healthy", "message": "Health AI API is operational"}
@@ -28,6 +41,14 @@ def predict(data: PatientData):
     # Get prediction from your model
     result = predict_health_status(data.model_dump())
     return result
+
+@app.post("/check-drug-conflict")
+def check_drug_conflict(data: DrugList):
+    try:
+        result = check_conflicts(data.drugs)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ---------- Report upload ----------
 """@app.post("/predict-from-report")

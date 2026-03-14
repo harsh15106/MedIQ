@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiUploadCloud, FiFileText, FiTrash2, FiClock } from 'react-icons/fi';
+import { FiArrowLeft, FiUploadCloud, FiFileText, FiTrash2, FiClock, FiDownload } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { jsPDF } from 'jspdf';
 
 import { supabase } from '../utils/SupabaseClient';
 
@@ -293,6 +294,92 @@ if (result.success) {
     ), { duration: Infinity, id: docId });
   };
 
+  // PDF Download for AI Health Analysis
+  const downloadHealthPDF = () => {
+    if (!modelInsights) return;
+    const doc = new jsPDF();
+
+    doc.setFontSize(22);
+    doc.setTextColor(37, 99, 235);
+    doc.text('MedIQ Health Analysis Report', 14, 20);
+    doc.setFontSize(10);
+    doc.setTextColor(120);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
+    doc.setDrawColor(200);
+    doc.line(14, 32, 196, 32);
+
+    let y = 42;
+
+    // Predicted Condition
+    const condition = typeof modelInsights?.predicted_condition === 'string'
+      ? modelInsights.predicted_condition
+      : typeof modelInsights?.prediction === 'string'
+      ? modelInsights.prediction
+      : 'Unknown';
+    doc.setFontSize(13);
+    doc.setTextColor(16, 185, 129);
+    doc.setFont(undefined, 'bold');
+    doc.text('Predicted Condition', 14, y);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(12);
+    doc.setTextColor(30);
+    doc.text(condition, 14, y + 8);
+    y += 22;
+
+    // Confidence
+    if (modelInsights.confidence !== undefined) {
+      doc.setFontSize(13);
+      doc.setTextColor(37, 99, 235);
+      doc.setFont(undefined, 'bold');
+      doc.text('Model Confidence', 14, y);
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(12);
+      doc.setTextColor(30);
+      const confStr = typeof modelInsights.confidence === 'number'
+        ? `${(modelInsights.confidence * 100).toFixed(1)}%`
+        : String(modelInsights.confidence);
+      doc.text(confStr, 14, y + 8);
+      y += 22;
+    }
+
+    // Risk Category
+    const riskVal = modelInsights.risk_category || modelInsights.riskLevel;
+    if (riskVal) {
+      doc.setFontSize(13);
+      doc.setTextColor(234, 179, 8);
+      doc.setFont(undefined, 'bold');
+      doc.text('Risk Category', 14, y);
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(12);
+      doc.setTextColor(30);
+      doc.text(riskVal, 14, y + 8);
+      y += 22;
+    }
+
+    // Clinical Indicators
+    if (Array.isArray(modelInsights.clinical_indicators) && modelInsights.clinical_indicators.length > 0) {
+      doc.setFontSize(13);
+      doc.setTextColor(20, 184, 166);
+      doc.setFont(undefined, 'bold');
+      doc.text('Contributing Biomarkers', 14, y);
+      y += 8;
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(11);
+      doc.setTextColor(60);
+      modelInsights.clinical_indicators.forEach((item) => {
+        doc.text(`• ${item}`, 18, y);
+        y += 7;
+      });
+    }
+
+    const pageHeight = doc.internal.pageSize.getHeight();
+    doc.setFontSize(9);
+    doc.setTextColor(150);
+    doc.text('Disclaimer: This report is AI-generated and not a substitute for professional medical advice.', 14, pageHeight - 10);
+    doc.save('MedIQ_Health_Analysis_Report.pdf');
+    toast.success('Report downloaded successfully.');
+  };
+
   return (
     <div className="min-h-screen bg-theme-bg text-theme-text transition-colors duration-300 pb-12 font-sans relative overflow-x-hidden">
 
@@ -521,6 +608,12 @@ if (result.success) {
                   className="mt-6 w-full py-2 text-sm font-semibold text-slate-500 hover:text-slate-700 underline"
                 >
                   Clear Results
+                </button>
+                <button
+                  onClick={downloadHealthPDF}
+                  className="mt-2 w-full py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <FiDownload /> Download Report PDF
                 </button>
               </div>
             )}</div>

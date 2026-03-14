@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/SupabaseClient';
-import { FiUser, FiActivity, FiFolder, FiSettings, FiTrendingUp, FiCpu, FiShield } from 'react-icons/fi';
+import { FiUser, FiActivity, FiFolder, FiSettings, FiTrendingUp, FiCpu, FiShield, FiAlertTriangle } from 'react-icons/fi';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 
 const defaultSymptomData = [
@@ -468,6 +468,13 @@ export default function Dashboard() {
                   desc="Manage your data and platform settings."
                   icon={<FiSettings size={24} />}
                   onClick={() => navigate('/settings')}
+                />
+
+                <QuickActionCard
+                  title="Drug Conflict Checker"
+                  desc="Check for dangerous drug interactions."
+                  icon={<FiAlertTriangle size={24} />}
+                  onClick={() => navigate('/drug-conflict')}
                 />
               </>
             )}
