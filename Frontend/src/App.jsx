@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/Landingpage';
-import AuthPage from './pages/Authpage';
+import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
 import MedicalProfile from './pages/MedicalProfile';
 import HealthRecords from './pages/HealthRecords';
