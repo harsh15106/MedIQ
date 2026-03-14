@@ -24,13 +24,13 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
  * (using Flask/FastAPI) running your actual Machine Learning model (e.g. Scikit-learn, TensorFlow).
  */
 
-const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://127.0.0.1:8000';
+const ML_SERVICE_URL = process.env.HEALTH_MODEL_API;
 // Add this helper to handle JSON vs File logic
 app.post('/api/analyze-health', upload.single('file'), async (req, res) => {
     console.log(req.body)
     try {
         let response;
-        const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://127.0.0.1:8000';
+        const ML_SERVICE_URL = process.env.HEALTH_MODEL_API;;
 
         if (req.file) {
             // SCENARIO A: File Upload (PDF/Image)
