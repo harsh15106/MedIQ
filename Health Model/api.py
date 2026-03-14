@@ -1,5 +1,3 @@
-from unittest import result
-
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
 from service import predict_health_status
@@ -29,26 +27,6 @@ def predict(data: PatientData):
     result = predict_health_status(data.model_dump())
     return result
 
-# ---------- Report upload ----------
-"""@app.post("/predict-from-report")
-async def predict_from_report(file: UploadFile = File(...)):
-    # 1. Validate file type
-    if file.content_type not in ["application/pdf", "image/jpeg", "image/png"]:
-        raise HTTPException(status_code=400, detail="Invalid file type. Please upload a PDF or Image.")
-
-    try:
-        # 2. Extract values
-        # Make sure your extract function can handle the UploadFile object
-        values = await extract_values_from_report(file)
-        
-        # 3. Predict
-        result = predict_health_status(values)
-        return {"extracted_values": values, "prediction": result}
-
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing report: {str(e)}")
-        """
 @app.post("/predict-from-report")
 async def predict_from_report(file: UploadFile = File(...)):
     try:
@@ -70,3 +48,7 @@ async def predict_from_report(file: UploadFile = File(...)):
         traceback.print_exc()   # 🔥 THIS IS CRITICAL
         print("FULL ERROR:", e)
         raise
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8005)
