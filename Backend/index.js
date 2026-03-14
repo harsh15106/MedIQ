@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
-import axios from 'axios';  
+import axios from 'axios';
 import multer from 'multer';
 import FormData from 'form-data';
 dotenv.config();
@@ -34,7 +34,7 @@ app.post('/api/analyze-health', upload.single('file'), async (req, res) => {
 
         if (req.file) {
             // SCENARIO A: File Upload (PDF/Image)
-            
+
             const form = new FormData();
             form.append('file', req.file.buffer, {
                 filename: req.file.originalname,
@@ -49,20 +49,53 @@ app.post('/api/analyze-health', upload.single('file'), async (req, res) => {
             // Ensure req.body is not empty. If React sends JSON, 
             // ensure your frontend headers match or use a fallback.
             console.log("Processing manual metrics:", req.body);
-            
+
             response = await axios.post(`${ML_SERVICE_URL}/predict`, req.body);
         }
 
-        res.json({ 
-            success: true, 
-            analysis: response.data 
+        res.json({
+            success: true,
+            analysis: response.data
         });
 
     } catch (error) {
         console.error("ML Service Error:", error.message);
-        res.status(500).json({ 
-            success: false, 
-            error: "The AI Model service is currently unreachable." 
+        res.status(500).json({
+            success: false,
+            error: "The AI Model service is currently unreachable."
+        });
+    }
+});
+
+
+app.post('/api/analyze-report', upload.single('file'), async (req, res) => {
+    try {
+
+
+        // const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://127.0.0.1:8000';
+
+        const form = new FormData();
+        form.append('file', req.file.buffer, {
+            filename: req.file.originalname,
+            contentType: req.file.mimetype,
+        });
+
+        const response = await axios.post(
+            `${ML_SERVICE_URL}/predict-from-report`,
+            form,
+            { headers: form.getHeaders() }
+        );
+
+        res.json({
+            success: true,
+            analysis: response.data
+        });
+
+    } catch (error) {
+        console.error("Report Analysis Error:", error.message);
+        res.status(500).json({
+            success: false,
+            error: "AI model failed to process report."
         });
     }
 });
@@ -143,6 +176,42 @@ app.post('/api/analyze-report', upload.single('file'), async (req, res) => {
         return res.status(500).json({ success: false, error: "AI service is currently unavailable" });
     }
 });}*/
+
+// --- DAILY QUOTE AI ENDPOINT ---
+app.get('/api/daily-quote', async (req, res) => {
+    try {
+        // Fetch all quotes from the Supabase database
+        const { data: quotesData, error: quotesError } = await supabase
+            .from('daily_quotes')
+            .select('quote');
+
+        if (quotesError) throw quotesError;
+
+        if (!quotesData || quotesData.length === 0) {
+            // Fallback if the table is empty or doesn't exist yet
+            return res.json({
+                success: true,
+                quote: "Your recent hydration and activity levels indicate stable cardiovascular metrics."
+            });
+        }
+
+        // Use the current day of the month to select a quote that changes everyday
+        const currentDayOfMonth = new Date().getDate();
+        const index = currentDayOfMonth % quotesData.length;
+
+        return res.json({
+            success: true,
+            quote: quotesData[index].quote
+        });
+
+    } catch (error) {
+        console.error("Daily Quote Error:", error.message);
+        return res.status(500).json({
+            success: false,
+            error: "Failed to fetch daily quote"
+        });
+    }
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

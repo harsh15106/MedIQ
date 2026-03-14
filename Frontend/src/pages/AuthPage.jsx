@@ -27,7 +27,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-theme-bg flex flex-col lg:flex-row font-sans text-theme-text transition-colors duration-300 relative overflow-hidden">
+    <div className="min-h-screen bg-theme-bg flex flex-col font-sans text-theme-text transition-colors duration-300 relative overflow-hidden">
 
       {/* Back Button */}
       <button
@@ -38,38 +38,36 @@ export default function AuthPage() {
         Back
       </button>
 
-      {/* Left Side: Brand & Messaging (Dark AI Theme) */}
-      <div className="w-full lg:w-5/12 bg-gradient-to-br from-theme-accent-dark to-theme-accent-deep border-r border-white/10 flex flex-col justify-center p-12 lg:p-20 relative overflow-hidden min-h-[40vh] lg:min-h-screen">
+      {/* Top Side: Brand & Messaging (Dark AI Theme) */}
+      <div className="w-full bg-gradient-to-br from-theme-accent-dark to-theme-accent-deep border-b border-white/10 flex flex-col justify-center p-12 lg:py-16 xl:py-20 relative overflow-hidden">
         {/* Subtle abstract background */}
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.2) 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-theme-accent opacity-20 blur-[100px] rounded-full mix-blend-screen"></div>
+        <div className="absolute top-[-50%] left-[-10%] w-[120%] h-[120%] bg-theme-accent opacity-20 blur-[100px] rounded-[100%] mix-blend-screen pointer-events-none"></div>
 
-        <div className="relative z-10 flex flex-col h-full justify-between">
+        <div className="relative z-10 flex flex-col items-center text-center">
+          <Link to="/" className="inline-flex items-center gap-2 font-semibold text-3xl text-white tracking-tight mb-8">
+            <img src="/LOGO.png" alt="MedIQ Logo" className="w-10 h-10 object-contain" /> MedIQ
+          </Link>
+
           <div>
-            <Link to="/" className="inline-flex items-center gap-2 font-semibold text-3xl text-white tracking-tight">
-              <img src="/LOGO.png" alt="MedIQ Logo" className="w-10 h-10 object-contain" /> MedIQ
-            </Link>
-          </div>
-
-          <div className="mt-16 lg:mt-0">
             <div className="inline-block bg-white/10 backdrop-blur-sm border border-white/10 text-theme-surface-alt px-4 py-1.5 rounded-full text-xs font-semibold mb-6 tracking-widest uppercase">
               Secure Access
             </div>
             <h1 className="text-4xl lg:text-5xl font-semibold text-white tracking-tight leading-[1.1] mb-6">
-              Your Health <br />
+              Your Health <br className="sm:hidden" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-theme-accent-light">
                 Intelligence
-              </span> <br /> Starts Here.
+              </span> Starts Here.
             </h1>
-            <p className="text-theme-surface-alt opacity-90 text-lg font-normal max-w-sm">
+            <p className="text-theme-surface-alt opacity-90 text-lg font-normal max-w-xl mx-auto">
               Log in or create an account to access real-time symptom analysis and predictive risk modeling.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Right Side: Glassmorphism Form */}
-      <div className="w-full lg:w-7/12 flex items-center justify-center p-6 sm:p-12 relative bg-theme-bg">
+      {/* Bottom Side: Glassmorphism Form */}
+      <div className="w-full flex-grow flex items-center justify-center p-6 sm:py-16 relative bg-theme-bg">
 
         <div className={`w-full transition-all duration-500 ${isLogin ? 'max-w-md' : 'max-w-2xl'}`}>
 

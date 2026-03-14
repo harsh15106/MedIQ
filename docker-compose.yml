@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./Backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - ML_SERVICE_URL=http://health-api:8005
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+    depends_on:
+      - health-api
+
+  symptom-api:
+    build: ./Symptom Chatbot
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+
+  health-api:
+    build: ./Health Model
+    ports:
+      - "8005:8005"
+    environment:
+      - PORT=8005
+
+  frontend:
+    build: ./Frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiSend, FiUser, FiCpu, FiPaperclip, FiX, FiImage, FiFileText, FiMic, FiMicOff, FiVolume2, FiVolumeX, FiMaximize, FiDownload } from 'react-icons/fi';
 import { supabase } from '../utils/SupabaseClient';
@@ -8,30 +8,27 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { generateChatbotReport } from '../utils/generateReport';
 import LanguageSelector from '../components/LanguageSelector';
 
-// --- NEW TYPING EFFECT COMPONENT ---
-// Re-renders string word by word
-const TypeWriterText = ({ text, delay = 0 }) => {
-  const words = text.split(" ");
-  
-  return (
-    <div className="inline">
-      {words.map((word, index) => (
-        <motion.span
-          key={index}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{
-            duration: 0.1,
-            delay: delay + index * 0.05, // Stagger effect
-            ease: "easeIn"
-          }}
-          className="mr-1 inline-block"
-        >
-          {word}
-        </motion.span>
-      ))}
-    </div>
-  );
+// --- COMPATIBLE TYPING EFFECT COMPONENT ---
+const TypeWriterText = ({ text }) => {
+  const [displayedText, setDisplayedText] = useState('');
+
+  useEffect(() => {
+    setDisplayedText('');
+
+    const timer = setInterval(() => {
+      setDisplayedText((prev) => {
+        if (prev.length < text.length) {
+          return text.slice(0, prev.length + 1);
+        }
+        clearInterval(timer);
+        return prev;
+      });
+    }, 15); // Slightly faster typing speed
+
+    return () => clearInterval(timer);
+  }, [text]);
+
+  return <>{displayedText}</>;
 };
 
 export default function SymptomCheck() {
@@ -43,7 +40,7 @@ export default function SymptomCheck() {
     {
       id: 1,
       sender: 'ai',
-      text: "Hello! I am the MedIQ AI. I have reviewed your medical history. What symptoms are you experiencing today? You can also upload photos or lab reports."
+      text: "Hello! I am the MedIQ AI. I have reviewed your medical history. What symptoms are you experiencing today?"
     }
   ]);
   const [input, setInput] = useState('');
@@ -60,7 +57,6 @@ export default function SymptomCheck() {
 
   // Language State
   const [selectedLanguage, setSelectedLanguage] = useState('en');
-
   // NEW: AI Processing Screen State
   const [showProcessing, setShowProcessing] = useState(true);
   const [processingText, setProcessingText] = useState("Analyzing 1,284 health signals...");
@@ -76,8 +72,8 @@ export default function SymptomCheck() {
   const [patientProfile, setPatientProfile] = useState({
     age: 30,
     gender: "Male",
-    height_cm: 170.0,
-    weight_kg: 70.0,
+    height_cm: null,
+    weight_kg: null,
     smoker: false,
     family_history: false
   });
@@ -102,7 +98,7 @@ export default function SymptomCheck() {
             interimTranscript += event.results[i][0].transcript;
           }
         }
-        
+
         // Update input field dynamically
         if (finalTranscript) {
           setInput(prev => prev + (prev ? ' ' : '') + finalTranscript);
@@ -149,8 +145,9 @@ export default function SymptomCheck() {
             ...prev,
             age: age,
             gender: profile.gender || "Male",
-            height_cm: profile.height ? Number(profile.height) : 170.0,
-            weight_kg: profile.weight ? Number(profile.weight) : 70.0,
+            height_cm: profile.height ? Number(profile.height) : null,
+            weight_kg: profile.weight ? Number(profile.weight) : null,
+            user_id: user.id
           }));
         }
       } catch (err) {
@@ -178,10 +175,13 @@ export default function SymptomCheck() {
   }, []);
 
   // 2. AUTO-SCROLL TO BOTTOM OF CHAT
-  useEffect(() => {
+  const scrollToBottom = useCallback(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isThinking]);
+  }, []);
 
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isThinking, scrollToBottom]);
 
 
   // 3.2 HANDLE 3D BODY MAP SELECTION
@@ -193,19 +193,16 @@ export default function SymptomCheck() {
   // 3.5 TEXT TO SPEECH FUNCTION
   const speakText = (text) => {
     if (!voiceEnabled || !('speechSynthesis' in window)) return;
-    
+
     // Stop any current speech
     window.speechSynthesis.cancel();
-    
     const utterance = new SpeechSynthesisUtterance(text);
     // You can customize voice, pitch, rate here
     utterance.rate = 1.05;
     utterance.pitch = 1;
-    
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
-    
     window.speechSynthesis.speak(utterance);
   };
 
@@ -232,9 +229,9 @@ export default function SymptomCheck() {
   // Cleanup speech synthesis on unmount
   useEffect(() => {
     return () => {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-        }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
     }
   }, []);
 
@@ -282,7 +279,7 @@ export default function SymptomCheck() {
 
     try {
       // Call the Python FastAPI
-      const response = await fetch('http://127.0.0.1:8001/chat', {
+      const response = await fetch('http://127.0.0.1:8000/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -351,38 +348,103 @@ export default function SymptomCheck() {
 
   if (showProcessing) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-theme-accent-dark to-theme-accent-deep text-white overflow-hidden">
-        {/* Subtle radial glow background */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/5 to-transparent blur-3xl opacity-50"></div>
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white text-slate-800 overflow-hidden">
+        {/* Subtle radial glow background to maintain theme DNA */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-50/50 via-white to-white"></div>
 
-        {/* Animated Orbs/Rings */}
-        <div className="relative flex items-center justify-center mb-12">
-          <div className="absolute w-64 h-64 border-[1px] border-theme-accent/30 rounded-full animate-[spin_10s_linear_infinite]"></div>
-          <div className="absolute w-48 h-48 border-[2px] border-teal-500/40 rounded-full border-t-transparent animate-[spin_3s_linear_infinite_reverse]"></div>
-          <div className="absolute w-32 h-32 border-[2px] border-white/20 rounded-full border-b-transparent animate-[spin_4s_ease-in-out_infinite]"></div>
+        {/* --- HIGH-TECH SCANNING RAYS --- */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-blue-400/30 to-transparent animate-[scan-vertical_4s_linear_infinite]"></div>
+          <div className="absolute top-0 left-0 h-full w-[2px] bg-gradient-to-b from-transparent via-teal-400/20 to-transparent animate-[scan-horizontal_6s_linear_infinite]"></div>
+        </div>
 
-          {/* Center Core */}
-          <div className="w-16 h-16 bg-theme-accent rounded-full animate-pulse shadow-[0_0_30px_10px_rgba(47,164,164,0.3)] flex items-center justify-center">
-            <FiCpu className="text-3xl text-white opacity-90 animate-pulse" />
+        {/* --- DYNAMIC NEURAL CORE --- */}
+        <div className="relative flex items-center justify-center mb-16">
+
+          {/* Circular ECG Heartbeat Waveform */}
+          <div className="absolute w-80 h-80 opacity-40">
+            <svg className="w-full h-full animate-[spin_10s_linear_infinite]" viewBox="0 0 100 100">
+              <path
+                d="M 10,50 L 30,50 L 35,30 L 40,70 L 45,50 L 90,50"
+                fill="none"
+                stroke="#2563eb"
+                strokeWidth="1"
+                strokeDasharray="200"
+                className="animate-[dash_3s_ease-in-out_infinite]"
+              />
+            </svg>
+          </div>
+
+          {/* Synaptic Ring Layers */}
+          <div className="absolute w-64 h-64 rounded-full border border-blue-100 shadow-[inset_0_0_30px_rgba(37,99,235,0.03)]"></div>
+          <div className="absolute w-52 h-52 rounded-full border-2 border-blue-400/20 border-t-blue-500 animate-spin"></div>
+          <div className="absolute w-44 h-44 rounded-full border border-teal-300/30 animate-[spin_4s_linear_infinite_reverse]"></div>
+
+          {/* Central Biometric Hub */}
+          <div className="relative w-28 h-28 bg-white border border-slate-100 rounded-3xl shadow-[0_10px_40px_rgba(37,99,235,0.15)] flex items-center justify-center overflow-hidden z-10 animate-[pulse_2s_ease-in-out_infinite]">
+            <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/5 to-teal-500/5"></div>
+            <FiCpu className="text-4xl text-blue-600 drop-shadow-sm" />
+
+            {/* Inner "Thinking" Pulse */}
+            <div className="absolute bottom-4 flex gap-1">
+              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+              <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+              <span className="w-1.5 h-1.5 bg-blue-300 rounded-full animate-bounce"></span>
+            </div>
           </div>
         </div>
 
-        {/* Dynamic Text */}
-        <div className="relative z-10 flex flex-col items-center text-center">
-          <div className="text-theme-surface-alt font-medium tracking-widest text-sm uppercase mb-4 opacity-80 animate-pulse">
-            System Active
+        {/* --- STATUS TEXT AREA --- */}
+        <div className="relative z-10 flex flex-col items-center text-center max-w-sm px-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-100 rounded-full mb-6">
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+            </span>
+            <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-blue-600">MedIQ Neural Engine</span>
           </div>
-          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight h-10 transition-opacity duration-500 text-white/90">
+
+          <h2 className="text-2xl font-bold tracking-tight text-slate-800 mb-8 min-h-[3rem]">
             {processingText}
           </h2>
+
+          <div className="w-64 h-1.5 bg-slate-100 rounded-full overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-teal-400 to-blue-600 w-full animate-[loading-bar_2s_infinite]"></div>
+          </div>
+
+          <p className="mt-4 text-slate-400 text-xs font-medium uppercase tracking-widest opacity-60">
+            Synthesizing Clinical Logic
+          </p>
         </div>
+
+        {/* Custom CSS for the specialized animations */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+          @keyframes dash {
+            0% { stroke-dashoffset: 200; opacity: 0; }
+            50% { opacity: 1; }
+            100% { stroke-dashoffset: 0; opacity: 0; }
+          }
+          @keyframes scan-vertical {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+          }
+          @keyframes scan-horizontal {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100vw); }
+          }
+          @keyframes loading-bar {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+          }
+        `}} />
       </div>
     );
   }
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 transition-colors duration-300 relative overflow-hidden">
-      
+
       {/* --- 3D BACKGROUND --- */}
       <FloatingDNA />
 
@@ -405,7 +467,6 @@ export default function SymptomCheck() {
             </div>
           </div>
         </div>
-        
         {/* Voice Toggle */}
         <button
           onClick={toggleVoice}
@@ -431,11 +492,10 @@ export default function SymptomCheck() {
       {/* --- CHAT HISTORY AREA --- */}
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-transparent scroll-smooth z-10 relative">
         <div className="w-full max-w-none px-4 md:px-12 mx-auto space-y-8 pb-4">
-          
           <AnimatePresence initial={false}>
             {messages.map((msg) => (
-              <motion.div 
-                key={msg.id} 
+              <motion.div
+                key={msg.id}
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
@@ -481,28 +541,59 @@ export default function SymptomCheck() {
                     </motion.button>
                   )}
                 </div>
-
               </motion.div>
             ))}
           </AnimatePresence>
 
           {/* --- AI THINKING INDICATOR --- */}
           {isThinking && (
-            <motion.div 
-               initial={{ opacity: 0, y: 10 }}
-               animate={{ opacity: 1, y: 0 }}
-               className="flex gap-4"
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex gap-4"
             >
-              <div className="w-11 h-11 rounded-full bg-white border border-slate-200 text-blue-600 shadow-md flex items-center justify-center flex-shrink-0 animate-pulse">
-                <FiCpu className="text-xl" />
+              <div className="w-11 h-11 rounded-full bg-white border border-slate-200 text-blue-600 shadow-md flex items-center justify-center flex-shrink-0 relative overflow-hidden group">
+                {/* Premium rotating border effect */}
+                <div className="absolute inset-[-50%] bg-[conic-gradient(from_0deg,transparent_0_340deg,#3b82f6_360deg)] animate-[spin_3s_linear_infinite] opacity-50"></div>
+                <div className="absolute inset-0 m-[1px] bg-white rounded-full flex items-center justify-center z-10">
+                  <FiCpu className="text-xl animate-pulse" />
+                </div>
               </div>
-              <div className="bg-white border border-slate-100 px-6 py-5 rounded-[24px] rounded-tl-sm shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex items-center gap-2">
-                 <div className="flex gap-1.5 items-center">
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500/80 animate-[ping_1.5s_infinite_0ms]"></span>
-                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-500/80 animate-[ping_1.5s_infinite_200ms]"></span>
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue-400/80 animate-[ping_1.5s_infinite_400ms]"></span>
-                 </div>
-                 <span className="ml-3 text-sm font-bold text-slate-400 uppercase tracking-widest animate-pulse">Analyzing</span>
+              <div className="bg-white border border-slate-100 pl-4 pr-6 py-4 rounded-[24px] rounded-tl-sm shadow-[0_4px_25px_rgba(0,0,0,0.04)] flex items-center gap-4 relative overflow-hidden">
+                {/* Subtle gradient wash over thinking container */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-transparent"></div>
+
+                {/* Modern Equalizer/Scanner Animation */}
+                <div className="flex gap-1 items-end h-4 relative z-10 opacity-80">
+                  <motion.div
+                    animate={{ height: ["4px", "14px", "4px"] }}
+                    transition={{ repeat: Infinity, duration: 1, ease: "easeInOut", delay: 0 }}
+                    className="w-1 bg-blue-500 rounded-full"
+                  />
+                  <motion.div
+                    animate={{ height: ["6px", "16px", "6px"] }}
+                    transition={{ repeat: Infinity, duration: 1, ease: "easeInOut", delay: 0.15 }}
+                    className="w-1 bg-indigo-500 rounded-full"
+                  />
+                  <motion.div
+                    animate={{ height: ["4px", "10px", "4px"] }}
+                    transition={{ repeat: Infinity, duration: 1, ease: "easeInOut", delay: 0.3 }}
+                    className="w-1 bg-cyan-400 rounded-full"
+                  />
+                  <motion.div
+                    animate={{ height: ["8px", "16px", "8px"] }}
+                    transition={{ repeat: Infinity, duration: 1, ease: "easeInOut", delay: 0.45 }}
+                    className="w-1 bg-blue-400 rounded-full"
+                  />
+                </div>
+
+                <span className="text-[13px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 tracking-widest uppercase relative z-10 flex items-center gap-1.5">
+                  Analyzing
+                  <motion.span
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                  >...</motion.span>
+                </span>
               </div>
             </motion.div>
           )}
@@ -547,7 +638,7 @@ export default function SymptomCheck() {
                 className={`w-full pl-6 pr-28 py-4.5 bg-white text-slate-800 rounded-2xl border-2 outline-none font-medium text-[16px] shadow-sm transition-all focus:shadow-md ${isRecording ? 'border-red-300 focus:border-red-400 bg-red-50/30 placeholder-red-400' : 'border-slate-200 focus:border-blue-400 hover:border-slate-300 placeholder-slate-400'}`}
                 disabled={isThinking}
               />
-              
+
               {/* Mic and Send Button Container */}
               <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1.5">
                 <button
@@ -561,9 +652,8 @@ export default function SymptomCheck() {
                   }`}
                   title={isRecording ? "Stop Recording" : "Start Voice Input"}
                 >
-                    {isRecording ? <FiMicOff className="text-xl" /> : <FiMic className="text-xl" />}
+                  {isRecording ? <FiMicOff className="text-xl" /> : <FiMic className="text-xl" />}
                 </button>
-                
                 <button
                   type="submit"
                   disabled={!input.trim() || isThinking}
@@ -576,7 +666,7 @@ export default function SymptomCheck() {
           </form>
 
           <p className="text-center text-[11px] text-slate-400 font-semibold mt-4 tracking-wider uppercase">
-             MedIQ AI generates predictions based on health data. Always consult a physician.
+            MedIQ AI generates predictions based on health data. Always consult a physician.
           </p>
         </div>
       </div>
