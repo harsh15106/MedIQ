@@ -45,7 +45,7 @@ export default function DrugInteractionChecker() {
   useEffect(() => {
     const fetchDrugs = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8001/drugs');
+        const res = await fetch('http://localhost:5000/drugs');
         const data = await res.json();
         setDrugList(data);
       } catch (err) {
@@ -86,7 +86,7 @@ export default function DrugInteractionChecker() {
     if (selectedDrugs.length < 2) return;
     setIsChecking(true);
     try {
-      const res = await fetch('http://127.0.0.1:8001/check-interactions', {
+      const res = await fetch('http://localhost:5000/check-interactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ drugs: selectedDrugs.map(d => d.name) })

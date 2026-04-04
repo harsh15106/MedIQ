@@ -9,6 +9,7 @@ import SymptomCheck from './pages/SymptomCheck';
 import { Toaster } from 'react-hot-toast';
 import ProfileSettings from './pages/ProfileSettings';
 import DrugInteractionChecker from './pages/DrugInteractionChecker';
+import SOSButton from './components/SOSButton';
 
 
 console.log("SUPABASE URL:", import.meta.env.VITE_SUPABASE_URL)
@@ -61,6 +62,7 @@ function App() {
             </div>
           } />
         </Routes>
+        <SOSButton />
       </div>
     </Router>
   );

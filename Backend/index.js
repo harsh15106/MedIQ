@@ -1,21 +1,27 @@
+import 'dotenv/config'; 
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
 import multer from 'multer';
 import FormData from 'form-data';
-dotenv.config();
+import drugRoutes from './routes/drugRoutes.js';
+
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use('/', drugRoutes);
 
 const upload = multer();
 
 // Initialize Supabase Client
-const supabaseUrl = process.env.SUPABASE_URL || 'YOUR_SUPABASE_URL';
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+console.log("SUPABASE_URL:", supabaseUrl);
+console.log("SUPABASE_KEY:", supabaseAnonKey?.slice(0, 10));
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /**

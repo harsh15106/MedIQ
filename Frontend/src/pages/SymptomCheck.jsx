@@ -279,7 +279,7 @@ export default function SymptomCheck() {
 
     try {
       // Call the Python FastAPI
-      const response = await fetch('http://127.0.0.1:8000/chat', {
+      const response = await fetch('http://127.0.0.1:8001/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -462,7 +462,7 @@ export default function SymptomCheck() {
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className={`w-2 h-2 rounded-full shadow-[0_0_8px_rgba(37,99,235,0.6)] ${isSpeaking ? 'bg-green-500 animate-pulse' : 'bg-blue-600 animate-pulse'}`}></span>
               <p className="text-xs text-blue-600 font-bold tracking-wide uppercase opacity-90">
-                  {isSpeaking ? 'AI Speaking...' : 'System Active'}
+                {isSpeaking ? 'AI Speaking...' : 'System Active'}
               </p>
             </div>
           </div>
@@ -480,12 +480,12 @@ export default function SymptomCheck() {
       {/* --- 3D BODY MAP MODAL --- */}
       {showBodyMap && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 backdrop-blur-md bg-slate-900/40">
-           <div className="w-full max-w-4xl relative animate-in fade-in zoom-in duration-300">
-               <PolishedBodyMap 
-                  onSelectPart={handleBodyPartSelect} 
-                  onClose={() => setShowBodyMap(false)} 
-               />
-           </div>
+          <div className="w-full max-w-4xl relative animate-in fade-in zoom-in duration-300">
+            <PolishedBodyMap
+              onSelectPart={handleBodyPartSelect}
+              onClose={() => setShowBodyMap(false)}
+            />
+          </div>
         </div>
       )}
 
@@ -604,7 +604,7 @@ export default function SymptomCheck() {
 
       {/* --- INPUT AREA --- */}
       <div className="bg-white/90 backdrop-blur-2xl border-t border-slate-100 p-4 sm:p-6 shrink-0 shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.03)] z-20">
-        
+
         <div className="w-full max-w-none px-4 md:px-12 mx-auto">
           {/* INPUT FORM */}
           <form onSubmit={handleSend} className="relative flex items-center gap-3">
@@ -645,11 +645,10 @@ export default function SymptomCheck() {
                   type="button"
                   onClick={toggleRecording}
                   disabled={isThinking}
-                  className={`p-2.5 rounded-xl transition-all flex items-center justify-center ${
-                      isRecording 
-                          ? 'bg-red-500 text-white animate-pulse shadow-lg scale-105' 
-                          : 'text-slate-400 hover:bg-slate-100 hover:text-blue-600'
-                  }`}
+                  className={`p-2.5 rounded-xl transition-all flex items-center justify-center ${isRecording
+                      ? 'bg-red-500 text-white animate-pulse shadow-lg scale-105'
+                      : 'text-slate-400 hover:bg-slate-100 hover:text-blue-600'
+                    }`}
                   title={isRecording ? "Stop Recording" : "Start Voice Input"}
                 >
                   {isRecording ? <FiMicOff className="text-xl" /> : <FiMic className="text-xl" />}
