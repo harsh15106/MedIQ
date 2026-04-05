@@ -185,7 +185,8 @@ export default function Dashboard() {
 
         // 3. Fetch Daily Quote from Node Backend
         try {
-          const quoteResponse = await fetch('http://localhost:5000/api/daily-quote');
+          const QUOTE_API = import.meta.env.VITE_QUOTE_API || 'http://localhost:5000';
+          const quoteResponse = await fetch(`${QUOTE_API}/api/daily-quote`);
           const quoteData = await quoteResponse.json();
           if (quoteData.success && quoteData.quote) {
             setDailyQuote(quoteData.quote);

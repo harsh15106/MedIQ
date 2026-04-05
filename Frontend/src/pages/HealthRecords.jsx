@@ -167,7 +167,7 @@ export default function HealthRecords() {
       if (newFile || healthMetrics.bloodGlucose || healthMetrics.systolicBP) {
         setIsAnalyzing(true);
         try {
-          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+          const apiUrl = import.meta.env.VITE_QUOTE_API || 'http://localhost:5000';
           let modelResponse;
 
           if (newFile) {

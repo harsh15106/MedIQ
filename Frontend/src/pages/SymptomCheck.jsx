@@ -279,7 +279,8 @@ export default function SymptomCheck() {
 
     try {
       // Call the Python FastAPI
-      const response = await fetch('http://127.0.0.1:8001/chat', {
+      const CHATBOT_API = import.meta.env.VITE_CHATBOT_API || 'http://127.0.0.1:8001';
+      const response = await fetch(`${CHATBOT_API}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

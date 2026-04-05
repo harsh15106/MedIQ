@@ -93,8 +93,8 @@ def translate_text(data: TranslateRequest):
 class PatientProfile(BaseModel):
     age: int
     gender: str
-    height_cm: float
-    weight_kg: float
+    height_cm: Optional[float] = None   # cm — optional; BMI defaults to 25.0 if absent
+    weight_kg: Optional[float] = None   # kg — optional; BMI defaults to 25.0 if absent
     smoker: bool
     family_history: bool
 
@@ -132,8 +132,13 @@ def chat(data: ChatRequest):
             pass
 
     # ── BMI calculation ───────────────────────────────────────────────────────
-    height_m = profile.height_cm / 100
-    bmi = round(profile.weight_kg / (height_m ** 2), 1) if profile.height_cm else 25.0
+    # Extract to local variables first so the type-checker can narrow correctly.
+    _h: Optional[float] = profile.height_cm
+    _w: Optional[float] = profile.weight_kg
+    if _h is not None and _w is not None and _h > 0:
+        bmi: float = round(_w / (_h / 100) ** 2, 1)
+    else:
+        bmi = 25.0  # clinically neutral default when measurements are unavailable
 
     # ── Step 1: Symptom Extraction ────────────────────────────────────────────
     extraction = extract_symptoms_from_text(new_text)
