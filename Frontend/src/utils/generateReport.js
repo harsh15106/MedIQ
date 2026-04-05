@@ -56,17 +56,19 @@ function addDisclaimer(doc, y) {
 }
 
 /**
- * Generate a PDF report from the chatbot diagnosis.
+ * Generate a safe PDF triage report from the chatbot.
  * @param {Object} data
- * @param {string} data.disease - Predicted condition
- * @param {string} data.report - Full report text
- * @param {string[]} data.confirmedSymptoms - List of confirmed symptoms
- * @param {Array} data.predictions - Top predictions with probabilities
- * @param {string} data.patientName - Patient name (optional)
+ * @param {string}   data.triage_level    - "emergency" | "urgent" | "non-urgent"
+ * @param {string}   data.status          - Assessment summary
+ * @param {string[]} data.symptoms        - Detected symptoms (human-readable)
+ * @param {string[]} data.possible_causes - Broad non-diagnostic possible causes
+ * @param {string}   data.advice          - Safe recommendation
+ * @param {string}   data.disclaimer      - Medical disclaimer
+ * @param {string}   [data.patientName]   - Optional patient name
  */
 export function generateChatbotReport(data) {
   const doc = new jsPDF();
-  let y = addHeader(doc, 'AI Diagnostic Report');
+  let y = addHeader(doc, 'Symptom Triage Report');
 
   // Patient Info Box
   if (data.patientName) {
@@ -79,121 +81,123 @@ export function generateChatbotReport(data) {
     y += 18;
   }
 
-  // Predicted Condition
-  doc.setFillColor(236, 253, 245);
+  // Triage Level Banner
+  const triage = (data.triage_level || 'non-urgent').toLowerCase();
+  const triageColors = {
+    emergency: { bg: [254, 242, 242], border: [220, 38, 38], text: [220, 38, 38], label: 'EMERGENCY' },
+    urgent: { bg: [255, 251, 235], border: [245, 158, 11], text: [180, 100, 0], label: 'URGENT' },
+    'non-urgent': { bg: [236, 253, 245], border: [16, 185, 129], text: [5, 150, 105], label: 'NON-URGENT' },
+  };
+  const tc = triageColors[triage] ?? triageColors['non-urgent'];
+
+  doc.setFillColor(...tc.bg);
   doc.roundedRect(14, y, 182, 18, 3, 3, 'F');
-  doc.setDrawColor(16, 185, 129);
+  doc.setDrawColor(...tc.border);
   doc.roundedRect(14, y, 182, 18, 3, 3, 'S');
   doc.setFontSize(9);
-  doc.setTextColor(5, 150, 105);
+  doc.setTextColor(...tc.text);
   doc.setFont('helvetica', 'bold');
-  doc.text('PREDICTED CONDITION', 18, y + 7);
-  doc.setFontSize(14);
+  doc.text('TRIAGE LEVEL', 18, y + 7);
+  doc.setFontSize(13);
+  doc.text(`${tc.label}`, 18, y + 15);
+  y += 26;
+
+  // Assessment
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(...DARK_TEXT);
-  doc.text(data.disease || 'Unknown', 18, y + 15);
-  y += 25;
-
-  // Top Predictions Table
-  if (data.predictions && data.predictions.length > 0) {
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...DARK_TEXT);
-    doc.text('Differential Diagnosis', 14, y);
-    y += 4;
-
-    doc.autoTable({
-      startY: y,
-      head: [['#', 'Condition', 'Probability']],
-      body: data.predictions.map((p, i) => [
-        i + 1,
-        p.disease,
-        `${(p.probability * 100).toFixed(1)}%`
-      ]),
-      theme: 'grid',
-      headStyles: {
-        fillColor: BRAND_COLOR,
-        textColor: [255, 255, 255],
-        fontSize: 9,
-        fontStyle: 'bold'
-      },
-      bodyStyles: { fontSize: 9, textColor: DARK_TEXT },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
-      margin: { left: 14, right: 14 },
-      columnStyles: {
-        0: { cellWidth: 12 },
-        2: { cellWidth: 30 }
-      }
-    });
-
-    y = doc.lastAutoTable.finalY + 8;
+  doc.text('Assessment', 14, y);
+  y += 6;
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...MUTED_TEXT);
+  const assessLines = doc.splitTextToSize(data.status || 'Data not available', 178);
+  for (const line of assessLines) {
+    doc.text(line, 14, y);
+    y += 5;
   }
+  y += 4;
 
-  // Confirmed Symptoms
-  if (data.confirmedSymptoms && data.confirmedSymptoms.length > 0) {
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...DARK_TEXT);
-    doc.text('Confirmed Symptoms', 14, y);
-    y += 4;
+  // Detected Symptoms Table
+  const symptoms = Array.isArray(data.symptoms) && data.symptoms.length > 0
+    ? data.symptoms
+    : ['Data not available'];
 
-    const symptomRows = data.confirmedSymptoms.map((s, i) => [
-      i + 1,
-      s.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-    ]);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...DARK_TEXT);
+  doc.text('Detected Symptoms', 14, y);
+  y += 4;
 
-    doc.autoTable({
-      startY: y,
-      head: [['#', 'Symptom']],
-      body: symptomRows,
-      theme: 'grid',
-      headStyles: {
-        fillColor: [99, 102, 241],
-        textColor: [255, 255, 255],
-        fontSize: 9,
-        fontStyle: 'bold'
-      },
-      bodyStyles: { fontSize: 9, textColor: DARK_TEXT },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
-      margin: { left: 14, right: 14 },
-      columnStyles: { 0: { cellWidth: 12 } }
-    });
+  doc.autoTable({
+    startY: y,
+    head: [['#', 'Symptom']],
+    body: symptoms.map((s, i) => [i + 1, s.replace(/\b\w/g, l => l.toUpperCase())]),
+    theme: 'grid',
+    headStyles: {
+      fillColor: [99, 102, 241],
+      textColor: [255, 255, 255],
+      fontSize: 9,
+      fontStyle: 'bold'
+    },
+    bodyStyles: { fontSize: 9, textColor: DARK_TEXT },
+    alternateRowStyles: { fillColor: [248, 250, 252] },
+    margin: { left: 14, right: 14 },
+    columnStyles: { 0: { cellWidth: 12 } }
+  });
+  y = doc.lastAutoTable.finalY + 8;
 
-    y = doc.lastAutoTable.finalY + 8;
+  // Possible Causes Table
+  const causes = Array.isArray(data.possible_causes) && data.possible_causes.length > 0
+    ? data.possible_causes
+    : ['Data not available'];
+
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...DARK_TEXT);
+  doc.text('Possible Causes (Not a Diagnosis)', 14, y);
+  y += 4;
+
+  doc.autoTable({
+    startY: y,
+    head: [['#', 'Possible Cause']],
+    body: causes.map((c, i) => [i + 1, c.replace(/\b\w/g, l => l.toUpperCase())]),
+    theme: 'grid',
+    headStyles: {
+      fillColor: BRAND_COLOR,
+      textColor: [255, 255, 255],
+      fontSize: 9,
+      fontStyle: 'bold'
+    },
+    bodyStyles: { fontSize: 9, textColor: DARK_TEXT },
+    alternateRowStyles: { fillColor: [248, 250, 252] },
+    margin: { left: 14, right: 14 },
+    columnStyles: { 0: { cellWidth: 12 } }
+  });
+  y = doc.lastAutoTable.finalY + 8;
+
+  // Recommendation
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...DARK_TEXT);
+  doc.text('Recommendation', 14, y);
+  y += 6;
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...MUTED_TEXT);
+  const adviceLines = doc.splitTextToSize(data.advice || 'Please consult a healthcare professional.', 178);
+  for (const line of adviceLines) {
+    if (y > 270) { doc.addPage(); y = 20; }
+    doc.text(line, 14, y);
+    y += 5;
   }
-
-  // Clinical Report Text
-  if (data.report) {
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...DARK_TEXT);
-    doc.text('Clinical Analysis', 14, y);
-    y += 6;
-
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...MUTED_TEXT);
-
-    const lines = doc.splitTextToSize(data.report.replace(/\*\*/g, ''), 178);
-    for (const line of lines) {
-      if (y > 270) {
-        doc.addPage();
-        y = 20;
-      }
-      doc.text(line, 14, y);
-      y += 4.5;
-    }
-    y += 6;
-  }
+  y += 6;
 
   // Disclaimer
-  if (y > 250) {
-    doc.addPage();
-    y = 20;
-  }
+  if (y > 250) { doc.addPage(); y = 20; }
   addDisclaimer(doc, y);
 
-  // Save
-  doc.save(`MedIQ_Diagnostic_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
+  doc.save(`MedIQ_Triage_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
 }
 
 

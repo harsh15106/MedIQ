@@ -307,19 +307,60 @@ export default function SymptomCheck() {
 
       if (data.type === "question") {
         setCurrentQuestionSymptomId(data.symptom_id);
-        aiResponseText = data.question_text;
-      } else if (data.type === "report") {
-        aiResponseText = data.report || `Based on my analysis, you might have ${data.top_disease}.`;
+        aiResponseText = data.question_text || "Could you describe your symptoms in more detail?";
 
-        // Store report data for PDF export
+      } else if (data.type === "report") {
+        // --- Safe triage-based formatting (no diagnosis, no medication) ---
+        const triage = data.triage_level || "non-urgent";
+        const status = data.status || "Data not available";
+        const causes = Array.isArray(data.possible_causes) && data.possible_causes.length > 0
+          ? data.possible_causes
+          : ["Data not available"];
+        const advice = data.advice || "Please consult a healthcare professional.";
+        const symptoms = Array.isArray(data.symptoms) && data.symptoms.length > 0
+          ? data.symptoms
+          : ["Data not available"];
+        const disclaimer = data.disclaimer || "This is not a confirmed diagnosis.";
+
+        // Triage level badge label
+        const triageLabel = {
+          emergency: "🚨 Emergency Alert",
+          urgent: "⚠️  Urgent",
+          "non-urgent": "ℹ️  Non-Urgent",
+        }[triage] ?? "ℹ️  Non-Urgent";
+
+        aiResponseText = [
+          `${triageLabel}`,
+          ``,
+          `Detected Symptoms:`,
+          symptoms.map(s => `  • ${s}`).join("\n"),
+          ``,
+          `Triage Level: ${triage.charAt(0).toUpperCase() + triage.slice(1)}`,
+          ``,
+          `Assessment:`,
+          `${status}`,
+          ``,
+          `Possible Causes:`,
+          causes.map(c => `  • ${c}`).join("\n"),
+          ``,
+          `Recommendation:`,
+          `${advice}`,
+          ``,
+          `⚕️ ${disclaimer}`,
+        ].join("\n");
+
+        // Store safe report data for PDF export (no disease name)
         setLastReportData({
-          disease: data.top_disease,
+          status,
+          triage_level: triage,
+          symptoms,
+          possible_causes: causes,
+          advice,
+          disclaimer,
           report: aiResponseText,
-          confirmedSymptoms: data.confirmed_symptoms || [],
-          predictions: data.predictions || []
         });
 
-        // Reset the diagnosis state so the next message starts fresh!
+        // Reset diagnosis state so next message starts fresh
         setConfirmedSymptoms([]);
         setDeniedSymptoms([]);
         setCurrentQuestionSymptomId(null);
@@ -528,7 +569,7 @@ export default function SymptomCheck() {
                   )}
 
                   {/* PDF Download Button — appears after a report-type AI message */}
-                  {msg.sender === 'ai' && lastReportData && msg.text && msg.text.includes('CLINICAL REPORT') && (
+                  {msg.sender === 'ai' && lastReportData && msg.text && msg.text.includes('Assessment:') && (
                     <motion.button
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}

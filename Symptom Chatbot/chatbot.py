@@ -92,7 +92,8 @@ while True:
     if match:
         duration_weeks = int(match.group(1))
 
-    detected = extract_symptoms_from_text(user_input)
+    extraction = extract_symptoms_from_text(user_input)
+    detected = extraction["detected_symptoms"]
 
     if not detected:
         print("No significant symptoms detected.")

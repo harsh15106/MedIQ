@@ -1,10 +1,16 @@
-from disease_medications import DISEASE_MEDICATIONS
-
-from disease_medications import DISEASE_MEDICATIONS
+"""
+clinical_response_engine.py
+============================
+Generates safe, non-diagnostic clinical summaries.
+Does NOT output medication names or treatment protocols.
+Surfaces only general risk context and a strong disclaimer.
+"""
 
 def generate_clinical_response(disease, symptoms, age, smoker, bmi):
-    output = ""
-    output += "\n\n AI CLINICAL REPORT"
+    """
+    Produces a safe, text-based clinical context note.
+    'disease' is used only as an internal label — it is NOT presented as a diagnosis.
+    """
     # BMI classification
     if bmi < 18.5:
         bmi_category = "Underweight"
@@ -15,38 +21,40 @@ def generate_clinical_response(disease, symptoms, age, smoker, bmi):
     else:
         bmi_category = "Obese"
 
-    output += f"\nBMI: {bmi} ({bmi_category})\n"
-    output += f"\nMost Likely Condition: {disease}\n"
+    output = "\n\n📋 CLINICAL CONTEXT NOTE\n"
+    output += "━" * 40 + "\n"
+    output += "⚕️ This is NOT a diagnosis. This system cannot confirm any medical condition.\n\n"
 
-    output += "\nRisk Factors:\n"
+    # Symptom summary
+    if symptoms:
+        readable = [s.replace("_", " ").title() for s in symptoms]
+        output += f"Reported symptoms: {', '.join(readable)}\n\n"
+
+    # Personal risk factors only — no condition-specific advice
+    output += "Relevant personal risk factors:\n"
+    has_risk = False
 
     if age >= 65:
-        output += "- Age increases risk of complications\n"
+        output += "  - Age ≥ 65: higher baseline risk for many conditions\n"
+        has_risk = True
 
     if smoker:
-        output += "- Smoking increases cardiopulmonary risk\n"
+        output += "  - Smoking history: increases cardiopulmonary and oncological risk\n"
+        has_risk = True
 
     if bmi >= 30:
-        output += "- Obesity increases cardiovascular risk\n"
+        output += f"  - BMI {bmi} ({bmi_category}): associated with increased cardiovascular risk\n"
+        has_risk = True
+    elif bmi < 18.5:
+        output += f"  - BMI {bmi} ({bmi_category}): may indicate nutritional deficiency\n"
+        has_risk = True
 
-    if disease not in DISEASE_MEDICATIONS:
-        output += "\nNo detailed medication database available.\n"
-        return output
+    if not has_risk:
+        output += "  - No significant personal risk factors identified from the information provided\n"
 
-    data = DISEASE_MEDICATIONS[disease]
+    output += "\n"
+    output += "━" * 40 + "\n"
+    output += "⚠️ IMPORTANT: Do not use this information to self-diagnose or self-medicate.\n"
+    output += "Please consult a qualified healthcare professional for accurate diagnosis and treatment.\n"
 
-    output += "\nRecommended Medication Overview:\n"
-    output += f"\n{data.get('overview', '')}\n"
-
-    for med in data.get("medications", []):
-        output += "\n\n"
-        output += f"Medication: {med.get('name', 'N/A')}\n"
-        output += f"Class: {med.get('class', 'N/A')}\n"
-        output += f"Typical Use: {med.get('use', med.get('purpose', 'N/A'))}\n"
-        output += f"General Dose Info: {med.get('dose', med.get('dose_info', 'N/A'))}\n"
-        output += f"Timing: {med.get('timing', 'N/A')}\n"
-        output += f"Warnings: {med.get('warnings', 'N/A')}\n"
-
-    output += "\n\nImportant: This is a simplified overview. Medication choices depend on individual factors and should be made in consultation with a healthcare provider."
-    output += "\n\n"
     return output
